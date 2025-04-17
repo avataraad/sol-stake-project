@@ -9,7 +9,57 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      stake_accounts: {
+        Row: {
+          activation_epoch: number | null
+          active_stake_amount: number | null
+          created_at: string | null
+          delegated_stake_amount: number
+          id: string
+          role: string | null
+          sol_balance: number
+          stake_account: string
+          status: Database["public"]["Enums"]["stake_account_status"]
+          total_reward: number
+          type: string | null
+          updated_at: string | null
+          voter: string
+          wallet_address: string
+        }
+        Insert: {
+          activation_epoch?: number | null
+          active_stake_amount?: number | null
+          created_at?: string | null
+          delegated_stake_amount: number
+          id?: string
+          role?: string | null
+          sol_balance: number
+          stake_account: string
+          status: Database["public"]["Enums"]["stake_account_status"]
+          total_reward: number
+          type?: string | null
+          updated_at?: string | null
+          voter: string
+          wallet_address: string
+        }
+        Update: {
+          activation_epoch?: number | null
+          active_stake_amount?: number | null
+          created_at?: string | null
+          delegated_stake_amount?: number
+          id?: string
+          role?: string | null
+          sol_balance?: number
+          stake_account?: string
+          status?: Database["public"]["Enums"]["stake_account_status"]
+          total_reward?: number
+          type?: string | null
+          updated_at?: string | null
+          voter?: string
+          wallet_address?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +68,11 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      stake_account_status:
+        | "active"
+        | "inactive"
+        | "deactivating"
+        | "activating"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +187,13 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      stake_account_status: [
+        "active",
+        "inactive",
+        "deactivating",
+        "activating",
+      ],
+    },
   },
 } as const

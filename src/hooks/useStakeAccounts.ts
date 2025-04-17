@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { StakeAccount } from '@/types/solana';
-import { fetchStakeAccounts } from '@/services/solscan';
+import { fetchStakeAccounts, getStoredStakeAccounts } from '@/services/solscan';
 import { useToast } from "@/hooks/use-toast";
 
 export const useStakeAccounts = () => {
@@ -14,6 +14,14 @@ export const useStakeAccounts = () => {
     
     setIsLoading(true);
     try {
+      // First, try to get stored accounts
+      const storedAccounts = await getStoredStakeAccounts(address);
+      
+      if (storedAccounts.length > 0) {
+        setStakeAccounts(storedAccounts as StakeAccount[]);
+      }
+
+      // Then fetch and update from Solscan API
       const response = await fetchStakeAccounts(address);
       setStakeAccounts(response.data);
       

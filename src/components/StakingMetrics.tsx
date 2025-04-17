@@ -1,7 +1,11 @@
-import { ArrowUpRight, Calendar, Gift, Clock, Percent, Hourglass, Trophy, DollarSign } from "lucide-react";
+import { ArrowUpRight, Calendar, Gift, Clock, Percent, Hourglass, Trophy, DollarSign, PlusCircle, Edit2 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 import { useStakeAccounts } from '@/hooks/useStakeAccounts';
+import { useUserWallet } from '@/hooks/useUserWallet';
 import { useState } from 'react';
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 
 interface MetricCardProps {
   title: string;
@@ -30,28 +34,76 @@ const MetricCard = ({ title, value, change, subtitle, icon }: MetricCardProps) =
   </div>
 );
 
-const dummyChartData = Array.from({ length: 30 }, (_, i) => ({
-  name: `Day ${30 - i}`,
-  value: 0,
-}));
+const WalletDialog = ({
+  isOpen,
+  onOpenChange,
+  currentWallet,
+  onSubmit,
+  isLoading
+}: {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  currentWallet: string | null;
+  onSubmit: (address: string) => void;
+  isLoading: boolean;
+}) => {
+  const [newWallet, setNewWallet] = useState(currentWallet || '');
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{currentWallet ? 'Update Wallet' : 'Add Wallet'}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Input
+              placeholder="Enter Solana wallet address"
+              value={newWallet}
+              onChange={(e) => setNewWallet(e.target.value)}
+            />
+          </div>
+          <Button 
+            onClick={() => {
+              onSubmit(newWallet);
+              onOpenChange(false);
+            }}
+            disabled={isLoading || !newWallet}
+            className="w-full"
+          >
+            {isLoading ? 'Processing...' : (currentWallet ? 'Update' : 'Add')}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const StakingMetrics = () => {
-  const [walletAddress, setWalletAddress] = useState('');
-  const { stakeAccounts, isLoading, fetchAllStakeAccounts } = useStakeAccounts();
+  const { stakeAccounts, isLoading: isLoadingStakes, fetchAllStakeAccounts } = useStakeAccounts();
+  const { walletAddress, updateWallet, isLoading: isUpdatingWallet } = useUserWallet();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const handleWalletUpdate = async (address: string) => {
+    await updateWallet(address);
+    if (address) {
+      fetchAllStakeAccounts(address);
+    }
+  };
+
+  useEffect(() => {
+    if (walletAddress) {
+      fetchAllStakeAccounts(walletAddress);
+    }
+  }, [walletAddress]);
 
   const totalStakedBalance = stakeAccounts.reduce(
     (sum, account) => sum + account.delegated_stake_amount,
     0
   );
 
-  const handleTrack = () => {
-    if (!walletAddress) return;
-    fetchAllStakeAccounts(walletAddress);
-  };
-
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
-      {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
@@ -60,24 +112,38 @@ const StakingMetrics = () => {
           <p className="text-gray-400 mt-1">Monitor and track your staking metrics</p>
         </div>
         <div className="flex gap-3">
-          <input
-            type="text"
-            placeholder="Enter Solana wallet address"
-            value={walletAddress}
-            onChange={(e) => setWalletAddress(e.target.value)}
-            className="glass-card px-4 py-2 w-80 bg-transparent focus:outline-none focus:ring-2 focus:ring-purple-500"
-          />
-          <button 
-            className="px-6 py-2 bg-purple-600 rounded-lg hover:bg-purple-700 transition"
-            onClick={handleTrack}
-            disabled={isLoading}
-          >
-            {isLoading ? 'Loading...' : 'Track'}
-          </button>
+          {walletAddress ? (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-400">Wallet:</span>
+              <code className="px-2 py-1 bg-gray-800 rounded">{walletAddress.slice(0, 4)}...{walletAddress.slice(-4)}</code>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setIsDialogOpen(true)}
+              >
+                <Edit2 className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <Button
+              onClick={() => setIsDialogOpen(true)}
+              className="gap-2"
+            >
+              <PlusCircle className="h-4 w-4" />
+              Add Wallet
+            </Button>
+          )}
         </div>
       </div>
 
-      {/* Main Metrics */}
+      <WalletDialog
+        isOpen={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        currentWallet={walletAddress}
+        onSubmit={handleWalletUpdate}
+        isLoading={isUpdatingWallet}
+      />
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
           title="Staked Balance"
@@ -104,7 +170,6 @@ const StakingMetrics = () => {
         />
       </div>
 
-      {/* Secondary Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <MetricCard
           title="Lifetime Rewards"
@@ -126,7 +191,6 @@ const StakingMetrics = () => {
         />
       </div>
 
-      {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="chart-card">
           <div className="flex justify-between items-center mb-6">
@@ -193,7 +257,6 @@ const StakingMetrics = () => {
         </div>
       </div>
 
-      {/* Stake Accounts Table */}
       <div className="chart-card">
         <h3 className="font-semibold mb-4">Stake Accounts</h3>
         <p className="text-sm text-gray-400 mb-2">
@@ -218,7 +281,7 @@ const StakingMetrics = () => {
               {stakeAccounts.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="text-center py-8 text-gray-400">
-                    {isLoading 
+                    {isLoadingStakes 
                       ? 'Loading stake accounts...' 
                       : 'No stake accounts found. Enter an address and click "Track" to get started.'}
                   </td>

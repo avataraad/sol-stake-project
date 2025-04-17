@@ -7,36 +7,66 @@ import { useToast } from "@/hooks/use-toast";
 export const useStakeAccounts = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [stakeAccounts, setStakeAccounts] = useState<StakeAccount[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const fetchAllStakeAccounts = async (address: string) => {
-    if (!address) return;
+    if (!address) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid Solana wallet address",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setIsLoading(true);
+    setError(null);
+    
     try {
       // First, try to get stored accounts
+      console.log('Fetching stored stake accounts for address:', address);
       const storedAccounts = await getStoredStakeAccounts(address);
       
       if (storedAccounts.length > 0) {
+        console.log('Found stored accounts:', storedAccounts.length);
         setStakeAccounts(storedAccounts as StakeAccount[]);
+      } else {
+        console.log('No stored accounts found');
       }
 
       // Then fetch and update from Solscan API
+      console.log('Fetching fresh stake accounts from Solscan API');
       const response = await fetchStakeAccounts(address);
-      setStakeAccounts(response.data);
       
-      // Handle pagination if needed
-      let nextPage = response.next_page;
-      while (nextPage) {
-        const nextResponse = await fetchStakeAccounts(address + '&next=' + nextPage);
-        setStakeAccounts(prev => [...prev, ...nextResponse.data]);
-        nextPage = nextResponse.next_page;
+      console.log('Received response from Solscan:', response);
+      if (response.data && response.data.length > 0) {
+        setStakeAccounts(response.data);
+        
+        // Handle pagination if needed
+        let nextPage = response.next_page;
+        while (nextPage) {
+          console.log('Fetching next page:', nextPage);
+          const nextResponse = await fetchStakeAccounts(address + '&next=' + nextPage);
+          setStakeAccounts(prev => [...prev, ...nextResponse.data]);
+          nextPage = nextResponse.next_page;
+        }
+      } else {
+        console.log('No stake accounts returned from API');
+        if (storedAccounts.length === 0) {
+          toast({
+            title: "Information",
+            description: "No stake accounts found for this address.",
+          });
+        }
       }
     } catch (error) {
       console.error('Error fetching stake accounts:', error);
+      setError(error instanceof Error ? error.message : 'Unknown error occurred');
+      
       toast({
         title: "Error",
-        description: "Failed to fetch stake accounts. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to fetch stake accounts. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -47,6 +77,7 @@ export const useStakeAccounts = () => {
   return {
     stakeAccounts,
     isLoading,
+    error,
     fetchAllStakeAccounts,
   };
 };

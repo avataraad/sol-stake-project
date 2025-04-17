@@ -1,6 +1,7 @@
-
 import { ArrowUpRight, Calendar, Gift, Clock, Percent, Hourglass, Trophy, DollarSign } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
+import { useStakeAccounts } from '@/hooks/useStakeAccounts';
+import { useState } from 'react';
 
 interface MetricCardProps {
   title: string;
@@ -35,6 +36,19 @@ const dummyChartData = Array.from({ length: 30 }, (_, i) => ({
 }));
 
 const StakingMetrics = () => {
+  const [walletAddress, setWalletAddress] = useState('');
+  const { stakeAccounts, isLoading, fetchAllStakeAccounts } = useStakeAccounts();
+
+  const totalStakedBalance = stakeAccounts.reduce(
+    (sum, account) => sum + account.delegated_stake_amount,
+    0
+  );
+
+  const handleTrack = () => {
+    if (!walletAddress) return;
+    fetchAllStakeAccounts(walletAddress);
+  };
+
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
       {/* Header */}
@@ -48,11 +62,17 @@ const StakingMetrics = () => {
         <div className="flex gap-3">
           <input
             type="text"
-            placeholder="CFATy5hmHLpiEdy9HgHFGz"
+            placeholder="Enter Solana wallet address"
+            value={walletAddress}
+            onChange={(e) => setWalletAddress(e.target.value)}
             className="glass-card px-4 py-2 w-80 bg-transparent focus:outline-none focus:ring-2 focus:ring-purple-500"
           />
-          <button className="px-6 py-2 bg-purple-600 rounded-lg hover:bg-purple-700 transition">
-            Track
+          <button 
+            className="px-6 py-2 bg-purple-600 rounded-lg hover:bg-purple-700 transition"
+            onClick={handleTrack}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Loading...' : 'Track'}
           </button>
         </div>
       </div>
@@ -61,8 +81,7 @@ const StakingMetrics = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
           title="Staked Balance"
-          value="0.00 SOL"
-          change="+0.0% from last month"
+          value={`${(totalStakedBalance / 1e9).toFixed(2)} SOL`}
           icon={<DollarSign className="text-purple-400" size={20} />}
         />
         <MetricCard
@@ -196,11 +215,28 @@ const StakingMetrics = () => {
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td colSpan={9} className="text-center py-8 text-gray-400">
-                  No stake accounts found. Enter an address and click "Track" to get started.
-                </td>
-              </tr>
+              {stakeAccounts.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="text-center py-8 text-gray-400">
+                    {isLoading 
+                      ? 'Loading stake accounts...' 
+                      : 'No stake accounts found. Enter an address and click "Track" to get started.'}
+                  </td>
+                </tr>
+              ) : (
+                stakeAccounts.map((account) => (
+                  <tr key={account.stake_account} className="border-t border-gray-800">
+                    <td className="py-3 px-4 font-mono text-sm">{account.stake_account}</td>
+                    <td className="py-3 px-4">{(account.sol_balance / 1e9).toFixed(2)} SOL</td>
+                    <td className="py-3 px-4">{account.status}</td>
+                    <td className="py-3 px-4">{(account.delegated_stake_amount / 1e9).toFixed(2)} SOL</td>
+                    <td className="py-3 px-4">{(account.total_reward / 1e9).toFixed(2)} SOL</td>
+                    <td className="py-3 px-4 font-mono text-sm">{account.voter}</td>
+                    <td className="py-3 px-4">{account.type}</td>
+                    <td className="py-3 px-4">{account.role}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

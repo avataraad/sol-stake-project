@@ -34,12 +34,12 @@ const storeStakeAccounts = async (walletAddress: string, accounts: StakeAccount[
     console.error('Error deleting existing stake accounts:', deleteError);
   }
 
-  // Prepare stake accounts for insertion
+  // Prepare stake accounts for insertion with proper status mapping
   const stakeAccountsToInsert = accounts.map(account => ({
     wallet_address: walletAddress,
     stake_account: account.stake_account,
     sol_balance: account.sol_balance,
-    status: account.status.toLowerCase(),
+    status: mapStakeAccountStatus(account.status),
     delegated_stake_amount: account.delegated_stake_amount,
     total_reward: account.total_reward,
     voter: account.voter,
@@ -56,6 +56,23 @@ const storeStakeAccounts = async (walletAddress: string, accounts: StakeAccount[
 
   if (error) {
     console.error('Error storing stake accounts:', error);
+  }
+};
+
+// Helper function to map status to enum
+const mapStakeAccountStatus = (status: string): 'active' | 'inactive' | 'deactivating' | 'activating' => {
+  const loweredStatus = status.toLowerCase();
+  switch (loweredStatus) {
+    case 'active':
+      return 'active';
+    case 'inactive':
+      return 'inactive';
+    case 'deactivating':
+      return 'deactivating';
+    case 'activating':
+      return 'activating';
+    default:
+      return 'inactive'; // Default to inactive if status is not recognized
   }
 };
 

@@ -46,14 +46,16 @@ export const useStakeAccounts = () => {
           
           // Handle additional pages if needed
           let currentPage = 2;
-          while (response.metadata?.hasNextPage) {
-            console.log('Fetching next page:', currentPage);
-            const nextResponse = await fetchStakeAccounts(address, currentPage, 40);
-            if (nextResponse.data && nextResponse.data.length > 0) {
-              setStakeAccounts(prev => [...prev, ...nextResponse.data]);
-              currentPage++;
-            } else {
-              break;
+          if (response.metadata && response.metadata.hasNextPage) {
+            while (response.metadata.hasNextPage) {
+              console.log('Fetching next page:', currentPage);
+              const nextResponse = await fetchStakeAccounts(address, currentPage, 40);
+              if (nextResponse.data && nextResponse.data.length > 0) {
+                setStakeAccounts(prev => [...prev, ...nextResponse.data]);
+                currentPage++;
+              } else {
+                break;
+              }
             }
           }
         } else {

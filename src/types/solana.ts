@@ -14,5 +14,9 @@ export interface StakeAccount {
 
 export interface SolscanResponse {
   data: StakeAccount[];
-  next_page?: string;
+  metadata?: {
+    hasNextPage: boolean;
+    nextPage?: string;
+    totalItems?: number;
+  };
 }

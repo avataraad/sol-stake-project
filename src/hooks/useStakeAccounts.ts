@@ -37,31 +37,49 @@ export const useStakeAccounts = () => {
 
       // Then fetch and update from Solscan API
       console.log('Fetching fresh stake accounts from Solscan API');
-      const response = await fetchStakeAccounts(address);
-      
-      console.log('Received response from Solscan:', response);
-      if (response.data && response.data.length > 0) {
-        setStakeAccounts(response.data);
+      try {
+        const response = await fetchStakeAccounts(address);
         
-        // Handle pagination if needed
-        let nextPage = response.next_page;
-        while (nextPage) {
-          console.log('Fetching next page:', nextPage);
-          const nextResponse = await fetchStakeAccounts(address + '&next=' + nextPage);
-          setStakeAccounts(prev => [...prev, ...nextResponse.data]);
-          nextPage = nextResponse.next_page;
+        console.log('Received response from Solscan:', response);
+        if (response.data && response.data.length > 0) {
+          setStakeAccounts(response.data);
+          
+          // Handle pagination if needed
+          let nextPage = response.next_page;
+          while (nextPage) {
+            console.log('Fetching next page:', nextPage);
+            const nextResponse = await fetchStakeAccounts(address + '&next=' + nextPage);
+            setStakeAccounts(prev => [...prev, ...nextResponse.data]);
+            nextPage = nextResponse.next_page;
+          }
+        } else {
+          console.log('No stake accounts returned from API');
+          if (storedAccounts.length === 0) {
+            toast({
+              title: "Information",
+              description: "No stake accounts found for this address.",
+            });
+          }
         }
-      } else {
-        console.log('No stake accounts returned from API');
+      } catch (apiError) {
+        console.error('Error fetching from Solscan API:', apiError);
+        // Only show an error toast if we also don't have stored accounts
         if (storedAccounts.length === 0) {
           toast({
-            title: "Information",
-            description: "No stake accounts found for this address.",
+            title: "Error",
+            description: apiError instanceof Error ? apiError.message : "Failed to fetch from Solscan API. Using cached data if available.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Warning",
+            description: "Could not refresh data from Solscan. Using cached data instead.",
+            variant: "default",
           });
         }
       }
     } catch (error) {
-      console.error('Error fetching stake accounts:', error);
+      console.error('Error in fetch process:', error);
       setError(error instanceof Error ? error.message : 'Unknown error occurred');
       
       toast({

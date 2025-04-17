@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { SolscanResponse, StakeAccount } from "@/types/solana";
+import { Database } from "@/integrations/supabase/types";
 
 const SOLSCAN_API_URL = 'https://pro-api.solscan.io/v2.0/account/stake';
 
@@ -9,7 +10,6 @@ export const fetchStakeAccounts = async (address: string): Promise<SolscanRespon
   const { data: secretData, error: secretError } = await supabase
     .from('_secrets')
     .select('value')
-    .eq('name', 'SOLSCAN_API_KEY')
     .single();
   
   if (secretError) {
@@ -17,6 +17,7 @@ export const fetchStakeAccounts = async (address: string): Promise<SolscanRespon
     throw new Error('Failed to fetch API key');
   }
 
+  // The value might not exist in the response as TypeScript is indicating
   const apiKey = secretData?.value;
   
   if (!apiKey) {
@@ -39,20 +40,22 @@ export const fetchStakeAccounts = async (address: string): Promise<SolscanRespon
   if (!response.ok) {
     const errorText = await response.text();
     console.error(`Failed to fetch stake accounts: ${response.status} ${response.statusText}`, errorText);
-    throw new Error('Failed to fetch stake accounts');
+    throw new Error(`Failed to fetch stake accounts: ${response.status} ${errorText}`);
   }
 
   const data = await response.json();
   console.log('Successfully fetched stake accounts:', data);
 
   // Store fetched stake accounts in Supabase
-  await storeStakeAccounts(address, data.data);
+  if (data.data && data.data.length > 0) {
+    await storeStakeAccounts(address, data.data);
+  }
 
   return data;
 };
 
 // Helper function to map status to enum
-const mapStakeAccountStatus = (status: string): 'active' | 'inactive' | 'deactivating' | 'activating' => {
+const mapStakeAccountStatus = (status: string): Database["public"]["Enums"]["stake_account_status"] => {
   const loweredStatus = status.toLowerCase();
   switch (loweredStatus) {
     case 'active':

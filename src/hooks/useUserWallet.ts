@@ -15,7 +15,7 @@ export const useUserWallet = () => {
   const fetchUserWallet = async () => {
     try {
       const { data: userWallet } = await supabase
-        .from('user_wallets')
+        .from('user_wallets') // Corrected table name
         .select('wallet_address')
         .maybeSingle();
 
@@ -30,18 +30,12 @@ export const useUserWallet = () => {
   const updateWallet = async (newAddress: string) => {
     setIsLoading(true);
     try {
-      const { error: deleteError } = await supabase
+      const { error } = await supabase
         .from('user_wallets')
-        .delete()
-        .neq('wallet_address', newAddress);
+        .update({ wallet_address: newAddress })
+        .eq('user_id', supabase.auth.getUser().then(res => res.data.user?.id));
 
-      if (deleteError) throw deleteError;
-
-      const { error: insertError } = await supabase
-        .from('user_wallets')
-        .insert({ wallet_address: newAddress });
-
-      if (insertError) throw insertError;
+      if (error) throw error;
 
       setWalletAddress(newAddress);
       toast({

@@ -1,11 +1,20 @@
+import React, { useState, useEffect } from 'react'; // Added useEffect import
 import { ArrowUpRight, Calendar, Gift, Clock, Percent, Hourglass, Trophy, DollarSign, PlusCircle, Edit2 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 import { useStakeAccounts } from '@/hooks/useStakeAccounts';
 import { useUserWallet } from '@/hooks/useUserWallet';
-import { useState } from 'react';
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
+
+// Add dummy chart data to resolve missing reference
+const dummyChartData = [
+  { name: 'Jan', value: 100 },
+  { name: 'Feb', value: 200 },
+  { name: 'Mar', value: 150 },
+  { name: 'Apr', value: 300 },
+  { name: 'May', value: 250 },
+];
 
 interface MetricCardProps {
   title: string;

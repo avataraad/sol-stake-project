@@ -5,21 +5,26 @@ import { Database } from "@/integrations/supabase/types";
 
 const SOLSCAN_API_URL = 'https://pro-api.solscan.io/v2.0/account/stake';
 
-// To use this key properly, make sure you've set the SOLSCAN_API_KEY in your Supabase project secrets
-const SOLSCAN_API_KEY = "your-solscan-api-key"; // Replace with your actual Solscan API key
+// Add your Solscan API token here
+const SOLSCAN_API_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjcmVhdGVkQXQiOjE3NDQ4Mzc3MTcyODksImVtYWlsIjoiZXJpYy5rdWhuQGdlbWluaS5jb20iLCJhY3Rpb24iOiJ0b2tlbi1hcGkiLCJhcGlWZXJzaW9uIjoidjIiLCJpYXQiOjE3NDQ4Mzc3MTd9.jrnAu5QlIHFbkjIiBIKEpFronu7cub9HbUNGJZc7e8M";
 
-export const fetchStakeAccounts = async (address: string): Promise<SolscanResponse> => {
+export const fetchStakeAccounts = async (address: string, page = 1, pageSize = 40): Promise<SolscanResponse> => {
   // Add query parameters for pagination
   const url = new URL(SOLSCAN_API_URL);
   url.searchParams.append('address', address);
+  url.searchParams.append('page', page.toString());
+  url.searchParams.append('page_size', pageSize.toString());
 
   console.log('Fetching stake accounts with URL:', url.toString());
   
-  const response = await fetch(url.toString(), {
+  const requestOptions = {
+    method: 'GET',
     headers: {
-      'token': SOLSCAN_API_KEY,
-    },
-  });
+      'token': SOLSCAN_API_TOKEN
+    }
+  };
+  
+  const response = await fetch(url.toString(), requestOptions);
 
   if (!response.ok) {
     const errorText = await response.text();

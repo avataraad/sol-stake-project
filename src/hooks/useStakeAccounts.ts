@@ -38,19 +38,23 @@ export const useStakeAccounts = () => {
       // Then fetch and update from Solscan API
       console.log('Fetching fresh stake accounts from Solscan API');
       try {
-        const response = await fetchStakeAccounts(address);
+        const response = await fetchStakeAccounts(address, 1, 40);
         
         console.log('Received response from Solscan:', response);
         if (response.data && response.data.length > 0) {
           setStakeAccounts(response.data);
           
-          // Handle pagination if needed
-          let nextPage = response.next_page;
-          while (nextPage) {
-            console.log('Fetching next page:', nextPage);
-            const nextResponse = await fetchStakeAccounts(address + '&next=' + nextPage);
-            setStakeAccounts(prev => [...prev, ...nextResponse.data]);
-            nextPage = nextResponse.next_page;
+          // Handle additional pages if needed
+          let currentPage = 2;
+          while (response.metadata?.hasNextPage) {
+            console.log('Fetching next page:', currentPage);
+            const nextResponse = await fetchStakeAccounts(address, currentPage, 40);
+            if (nextResponse.data && nextResponse.data.length > 0) {
+              setStakeAccounts(prev => [...prev, ...nextResponse.data]);
+              currentPage++;
+            } else {
+              break;
+            }
           }
         } else {
           console.log('No stake accounts returned from API');

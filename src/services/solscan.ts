@@ -5,26 +5,10 @@ import { Database } from "@/integrations/supabase/types";
 
 const SOLSCAN_API_URL = 'https://pro-api.solscan.io/v2.0/account/stake';
 
+// To use this key properly, make sure you've set the SOLSCAN_API_KEY in your Supabase project secrets
+const SOLSCAN_API_KEY = "your-solscan-api-key"; // Replace with your actual Solscan API key
+
 export const fetchStakeAccounts = async (address: string): Promise<SolscanResponse> => {
-  // Get the API key from Supabase secrets
-  const { data: secretData, error: secretError } = await supabase
-    .from('_secrets')
-    .select('value')
-    .single();
-  
-  if (secretError) {
-    console.error('Error fetching Solscan API key:', secretError);
-    throw new Error('Failed to fetch API key');
-  }
-
-  // The value might not exist in the response as TypeScript is indicating
-  const apiKey = secretData?.value;
-  
-  if (!apiKey) {
-    console.error('Solscan API key is not set');
-    throw new Error('Solscan API key is not configured');
-  }
-
   // Add query parameters for pagination
   const url = new URL(SOLSCAN_API_URL);
   url.searchParams.append('address', address);
@@ -33,7 +17,7 @@ export const fetchStakeAccounts = async (address: string): Promise<SolscanRespon
   
   const response = await fetch(url.toString(), {
     headers: {
-      'token': apiKey,
+      'token': SOLSCAN_API_KEY,
     },
   });
 

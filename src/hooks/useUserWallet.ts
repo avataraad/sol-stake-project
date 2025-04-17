@@ -37,33 +37,44 @@ export const useUserWallet = () => {
   const updateWallet = async (newAddress: string) => {
     setIsLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      // First check if we have a user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError) throw userError;
       
       if (!user) {
-        throw new Error('No authenticated user');
+        // If no authenticated user, try inserting without user_id
+        const { error } = await supabase
+          .from('user_wallets')
+          .upsert({ 
+            wallet_address: newAddress 
+          });
+
+        if (error) throw error;
+      } else {
+        // If we have a user, include the user_id
+        const { error } = await supabase
+          .from('user_wallets')
+          .upsert({ 
+            user_id: user.id, 
+            wallet_address: newAddress 
+          }, {
+            onConflict: 'user_id'
+          });
+
+        if (error) throw error;
       }
-
-      const { error } = await supabase
-        .from('user_wallets')
-        .upsert({ 
-          user_id: user.id, 
-          wallet_address: newAddress 
-        }, {
-          onConflict: 'user_id'
-        });
-
-      if (error) throw error;
 
       setWalletAddress(newAddress);
       toast({
         title: "Success",
         description: "Wallet address updated successfully",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating wallet:', error);
       toast({
         title: "Error",
-        description: "Failed to update wallet address",
+        description: error.message || "Failed to update wallet address",
         variant: "destructive",
       });
     } finally {

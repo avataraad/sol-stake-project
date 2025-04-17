@@ -14,26 +14,43 @@ export const useUserWallet = () => {
 
   const fetchUserWallet = async () => {
     try {
-      const { data: userWallet } = await supabase
-        .from('user_wallets') // Corrected table name
+      const { data: userWallet, error } = await supabase
+        .from('user_wallets')
         .select('wallet_address')
         .maybeSingle();
+
+      if (error) throw error;
 
       if (userWallet) {
         setWalletAddress(userWallet.wallet_address);
       }
     } catch (error) {
       console.error('Error fetching wallet:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch wallet address",
+        variant: "destructive",
+      });
     }
   };
 
   const updateWallet = async (newAddress: string) => {
     setIsLoading(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('No authenticated user');
+      }
+
       const { error } = await supabase
         .from('user_wallets')
-        .update({ wallet_address: newAddress })
-        .eq('user_id', supabase.auth.getUser().then(res => res.data.user?.id));
+        .upsert({ 
+          user_id: user.id, 
+          wallet_address: newAddress 
+        }, {
+          onConflict: 'user_id'
+        });
 
       if (error) throw error;
 

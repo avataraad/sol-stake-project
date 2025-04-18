@@ -66,6 +66,16 @@ export const useStakeAccounts = () => {
       const allAccounts = await loadAllPages(address);
       setStakeAccounts(allAccounts);
       
+      // Debug the total rewards
+      const totalRewards = allAccounts.reduce((sum, account) => {
+        if (account.total_reward && typeof account.total_reward === 'number') {
+          return sum + account.total_reward;
+        }
+        return sum;
+      }, 0);
+      console.log(`Total rewards calculated: ${totalRewards}`);
+      console.log(`Number of accounts: ${allAccounts.length}`);
+      
       if (allAccounts.length > 0) {
         toast({
           title: "Success",
@@ -104,21 +114,39 @@ export const useStakeAccounts = () => {
   };
 
   const getTotalStakedBalance = useCallback(() => {
-    return stakeAccounts.reduce((sum, account) => {
+    const total = stakeAccounts.reduce((sum, account) => {
       const amount = typeof account.delegated_stake_amount === 'number' && !isNaN(account.delegated_stake_amount) 
         ? account.delegated_stake_amount 
         : 0;
       return sum + amount;
     }, 0);
+    console.log(`Total staked balance: ${total}`);
+    return total;
   }, [stakeAccounts]);
 
   const getLifetimeRewards = useCallback(() => {
-    return stakeAccounts.reduce((sum, account) => {
-      const reward = typeof account.total_reward === 'number' && !isNaN(account.total_reward) 
+    // Log a few accounts to see what the total_reward field looks like
+    if (stakeAccounts.length > 0) {
+      console.log("Sample account total_reward:", stakeAccounts[0].total_reward);
+      console.log("Sample account type:", typeof stakeAccounts[0].total_reward);
+    }
+    
+    const total = stakeAccounts.reduce((sum, account) => {
+      // Log each account's total_reward to see what we're working with
+      console.log(`Account ${account.stake_account} total_reward:`, account.total_reward);
+      
+      const reward = account.total_reward !== undefined && 
+                     account.total_reward !== null && 
+                     typeof account.total_reward === 'number' && 
+                     !isNaN(account.total_reward) 
         ? account.total_reward 
         : 0;
+      
       return sum + reward;
     }, 0);
+    
+    console.log(`Final lifetime rewards calculated: ${total}`);
+    return total;
   }, [stakeAccounts]);
 
   return {

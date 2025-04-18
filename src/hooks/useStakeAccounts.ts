@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { StakeAccount } from '@/types/solana';
 import { fetchStakeAccounts } from '@/services/solscan';
@@ -12,7 +11,7 @@ export const useStakeAccounts = () => {
   const [hasNextPage, setHasNextPage] = useState(false);
   const [lastFetchedAddress, setLastFetchedAddress] = useState('');
   const { toast } = useToast();
-  const PAGE_SIZE = 40;
+  const PAGE_SIZE = 10;
 
   const fetchAllStakeAccounts = async (address: string, page = 1) => {
     if (!address) {
@@ -65,6 +64,7 @@ export const useStakeAccounts = () => {
 
   const handlePageChange = (page: number) => {
     if (isLoading) return;
+    console.log('Changing to page:', page);
     fetchAllStakeAccounts(lastFetchedAddress, page);
   };
 
@@ -76,5 +76,6 @@ export const useStakeAccounts = () => {
     hasNextPage,
     fetchAllStakeAccounts,
     handlePageChange,
+    PAGE_SIZE,
   };
 };

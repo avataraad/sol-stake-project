@@ -15,14 +15,14 @@ const StakingMetrics = () => {
     currentPage,
     hasNextPage,
     fetchAllStakeAccounts,
-    handlePageChange 
+    handlePageChange,
   } = useStakeAccounts();
 
   useEffect(() => {
     if (walletAddress) {
-      fetchAllStakeAccounts(walletAddress);
+      fetchAllStakeAccounts(walletAddress, 1); // Always start from page 1
     }
-  }, []);
+  }, [walletAddress]);
 
   const totalStakedBalance = stakeAccounts.reduce(
     (sum, account) => sum + account.delegated_stake_amount,
@@ -31,7 +31,7 @@ const StakingMetrics = () => {
 
   const handleTrack = () => {
     if (!walletAddress) return;
-    fetchAllStakeAccounts(walletAddress);
+    fetchAllStakeAccounts(walletAddress, 1); // Reset to page 1 when tracking new address
   };
 
   return (

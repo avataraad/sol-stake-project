@@ -104,11 +104,21 @@ export const useStakeAccounts = () => {
   };
 
   const getTotalStakedBalance = useCallback(() => {
-    return stakeAccounts.reduce((sum, account) => sum + account.delegated_stake_amount, 0);
+    return stakeAccounts.reduce((sum, account) => {
+      const amount = typeof account.delegated_stake_amount === 'number' && !isNaN(account.delegated_stake_amount) 
+        ? account.delegated_stake_amount 
+        : 0;
+      return sum + amount;
+    }, 0);
   }, [stakeAccounts]);
 
   const getLifetimeRewards = useCallback(() => {
-    return stakeAccounts.reduce((sum, account) => sum + account.total_reward, 0);
+    return stakeAccounts.reduce((sum, account) => {
+      const reward = typeof account.total_reward === 'number' && !isNaN(account.total_reward) 
+        ? account.total_reward 
+        : 0;
+      return sum + reward;
+    }, 0);
   }, [stakeAccounts]);
 
   return {

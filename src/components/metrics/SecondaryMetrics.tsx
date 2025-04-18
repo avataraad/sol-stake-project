@@ -7,8 +7,13 @@ interface SecondaryMetricsProps {
 }
 
 const SecondaryMetrics = ({ lifetimeRewards }: SecondaryMetricsProps) => {
-  const formattedRewards = (lifetimeRewards / 1e9).toFixed(2);
-  const feeAmount = (lifetimeRewards * 0.05 / 1e9).toFixed(2);
+  // Ensure lifetimeRewards is a valid number
+  const numericLifetimeRewards = typeof lifetimeRewards === 'number' && !isNaN(lifetimeRewards) 
+    ? lifetimeRewards 
+    : 0;
+    
+  const formattedRewards = (numericLifetimeRewards / 1e9).toFixed(2);
+  const feeAmount = (numericLifetimeRewards * 0.05 / 1e9).toFixed(2);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

@@ -15,7 +15,7 @@ export const fetchStakeAccounts = async (address: string, page = 1, pageSize = 4
   url.searchParams.append('page', page.toString());
   url.searchParams.append('page_size', pageSize.toString());
 
-  console.log('Fetching stake accounts with URL:', url.toString());
+  console.log(`Fetching stake accounts for page ${page} with URL:`, url.toString());
   
   const requestOptions = {
     method: 'GET',
@@ -33,7 +33,7 @@ export const fetchStakeAccounts = async (address: string, page = 1, pageSize = 4
   }
 
   const data = await response.json();
-  console.log('Successfully fetched stake accounts:', data);
+  console.log(`Successfully fetched stake accounts for page ${page}:`, data);
 
   // Try to store fetched stake accounts in Supabase
   if (data.data && data.data.length > 0) {
@@ -47,6 +47,41 @@ export const fetchStakeAccounts = async (address: string, page = 1, pageSize = 4
   }
 
   return data;
+};
+
+// Helper function to fetch all pages of stake accounts
+export const fetchAllStakeAccountPages = async (address: string): Promise<StakeAccount[]> => {
+  let currentPage = 1;
+  let allAccounts: StakeAccount[] = [];
+  let hasMorePages = true;
+  
+  console.log('Starting to fetch all stake account pages');
+  
+  while (hasMorePages) {
+    console.log(`Fetching stake accounts page ${currentPage}`);
+    const response = await fetchStakeAccounts(address, currentPage, 40);
+    
+    if (response.data && response.data.length > 0) {
+      console.log(`Received ${response.data.length} accounts from page ${currentPage}`);
+      allAccounts = [...allAccounts, ...response.data];
+      
+      // Check if there are more pages
+      if (response.metadata && response.metadata.hasNextPage) {
+        currentPage++;
+        console.log(`More pages available, moving to page ${currentPage}`);
+      } else {
+        hasMorePages = false;
+        console.log('No more pages available');
+      }
+    } else {
+      // No data or empty array, stop pagination
+      hasMorePages = false;
+      console.log('No data received or empty array, stopping pagination');
+    }
+  }
+  
+  console.log(`Total stake accounts fetched across all pages: ${allAccounts.length}`);
+  return allAccounts;
 };
 
 // Helper function to map status to enum

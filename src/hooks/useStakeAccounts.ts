@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { StakeAccount } from '@/types/solana';
-import { fetchStakeAccounts, getStoredStakeAccounts } from '@/services/solscan';
+import { fetchAllStakeAccountPages, getStoredStakeAccounts } from '@/services/solscan';
 import { useToast } from "@/hooks/use-toast";
 
 export const useStakeAccounts = () => {
@@ -35,39 +35,19 @@ export const useStakeAccounts = () => {
         console.log('No stored accounts found');
       }
 
-      // Then fetch and update from Solscan API
-      console.log('Fetching fresh stake accounts from Solscan API');
+      // Then fetch and update from Solscan API using our new function that handles all pages
+      console.log('Fetching all stake accounts from Solscan API');
       try {
-        // Start with an empty array to collect all accounts
-        let allAccounts: StakeAccount[] = [];
-        let currentPage = 1;
-        let hasNextPage = true;
+        // Fetch all pages of stake accounts
+        const allAccounts = await fetchAllStakeAccountPages(address);
         
-        // Continue fetching pages until there are no more
-        while (hasNextPage) {
-          console.log(`Fetching page ${currentPage} from Solscan API`);
-          const response = await fetchStakeAccounts(address, currentPage, 40);
-          
-          if (response.data && response.data.length > 0) {
-            console.log(`Received ${response.data.length} accounts from page ${currentPage}`);
-            // Add new accounts to our collection
-            allAccounts = [...allAccounts, ...response.data];
-            
-            // Check if there are more pages
-            if (response.metadata && response.metadata.hasNextPage) {
-              currentPage++;
-            } else {
-              hasNextPage = false;
-            }
-          } else {
-            // No data in this response, stop pagination
-            hasNextPage = false;
-          }
-        }
-        
-        console.log(`Total accounts fetched: ${allAccounts.length}`);
+        console.log(`Total accounts fetched across all pages: ${allAccounts.length}`);
         if (allAccounts.length > 0) {
           setStakeAccounts(allAccounts);
+          toast({
+            title: "Success",
+            description: `Found ${allAccounts.length} stake accounts`,
+          });
         } else if (storedAccounts.length === 0) {
           toast({
             title: "Information",

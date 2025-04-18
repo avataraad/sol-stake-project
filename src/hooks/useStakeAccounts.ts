@@ -38,34 +38,41 @@ export const useStakeAccounts = () => {
       // Then fetch and update from Solscan API
       console.log('Fetching fresh stake accounts from Solscan API');
       try {
-        const response = await fetchStakeAccounts(address, 1, 40);
+        // Start with an empty array to collect all accounts
+        let allAccounts: StakeAccount[] = [];
+        let currentPage = 1;
+        let hasNextPage = true;
         
-        console.log('Received response from Solscan:', response);
-        if (response.data && response.data.length > 0) {
-          setStakeAccounts(response.data);
+        // Continue fetching pages until there are no more
+        while (hasNextPage) {
+          console.log(`Fetching page ${currentPage} from Solscan API`);
+          const response = await fetchStakeAccounts(address, currentPage, 40);
           
-          // Handle additional pages if needed
-          let currentPage = 2;
-          if (response.metadata && response.metadata.hasNextPage) {
-            while (response.metadata.hasNextPage) {
-              console.log('Fetching next page:', currentPage);
-              const nextResponse = await fetchStakeAccounts(address, currentPage, 40);
-              if (nextResponse.data && nextResponse.data.length > 0) {
-                setStakeAccounts(prev => [...prev, ...nextResponse.data]);
-                currentPage++;
-              } else {
-                break;
-              }
+          if (response.data && response.data.length > 0) {
+            console.log(`Received ${response.data.length} accounts from page ${currentPage}`);
+            // Add new accounts to our collection
+            allAccounts = [...allAccounts, ...response.data];
+            
+            // Check if there are more pages
+            if (response.metadata && response.metadata.hasNextPage) {
+              currentPage++;
+            } else {
+              hasNextPage = false;
             }
+          } else {
+            // No data in this response, stop pagination
+            hasNextPage = false;
           }
-        } else {
-          console.log('No stake accounts returned from API');
-          if (storedAccounts.length === 0) {
-            toast({
-              title: "Information",
-              description: "No stake accounts found for this address.",
-            });
-          }
+        }
+        
+        console.log(`Total accounts fetched: ${allAccounts.length}`);
+        if (allAccounts.length > 0) {
+          setStakeAccounts(allAccounts);
+        } else if (storedAccounts.length === 0) {
+          toast({
+            title: "Information",
+            description: "No stake accounts found for this address.",
+          });
         }
       } catch (apiError) {
         console.error('Error fetching from Solscan API:', apiError);

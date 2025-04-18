@@ -108,9 +108,7 @@ export const useStakeAccounts = () => {
 
   const getLifetimeRewards = useCallback(() => {
     return stakeAccounts.reduce((sum, account) => {
-      const reward = typeof account.total_reward === 'number' && !isNaN(account.total_reward)
-        ? account.total_reward
-        : 0;
+      const reward = Number(account.total_reward) || 0;
       return sum + reward;
     }, 0);
   }, [stakeAccounts]);

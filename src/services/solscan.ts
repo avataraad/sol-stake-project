@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { SolscanResponse, StakeAccount } from "@/types/solana";
 import { Database } from "@/integrations/supabase/types";
@@ -5,7 +6,10 @@ import { Database } from "@/integrations/supabase/types";
 const SOLSCAN_API_URL = 'https://pro-api.solscan.io/v2.0/account/stake';
 const SOLSCAN_API_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjcmVhdGVkQXQiOjE3NDQ4Mzc3MTcyODksImVtYWlsIjoiZXJpYy5rdWhuQGdlbWluaS5jb20iLCJhY3Rpb24iOiJ0b2tlbi1hcGkiLCJhcGlWZXJzaW9uIjoidjIiLCJpYXQiOjE3NDQ4Mzc3MTd9.jrnAu5QlIHFbkjIiBIKEpFronu7cub9HbUNGJZc7e8M";
 
-export const fetchStakeAccounts = async (address: string, page = 1, pageSize = 40): Promise<SolscanResponse> => {
+export const fetchStakeAccounts = async (address: string, page = 1): Promise<SolscanResponse> => {
+  // Always set page_size to 40
+  const pageSize = 40;
+
   // Add query parameters for pagination
   const url = new URL(SOLSCAN_API_URL);
   url.searchParams.append('address', address);

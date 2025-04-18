@@ -35,9 +35,15 @@ export const fetchStakeAccounts = async (address: string, page = 1, pageSize = 4
   const data = await response.json();
   console.log('Successfully fetched stake accounts:', data);
 
-  // Store fetched stake accounts in Supabase
+  // Try to store fetched stake accounts in Supabase
   if (data.data && data.data.length > 0) {
-    await storeStakeAccounts(address, data.data);
+    try {
+      await storeStakeAccounts(address, data.data);
+    } catch (error) {
+      // Log the error but continue with the flow
+      console.warn('Error storing stake accounts in Supabase (RLS policy may be restricting access):', error);
+      console.info('Continuing with API response data without storing in database');
+    }
   }
 
   return data;
@@ -61,51 +67,63 @@ const mapStakeAccountStatus = (status: string): Database["public"]["Enums"]["sta
 };
 
 const storeStakeAccounts = async (walletAddress: string, accounts: StakeAccount[]) => {
-  // Delete existing stake accounts for this wallet before inserting new ones
-  const { error: deleteError } = await supabase
-    .from('stake_accounts')
-    .delete()
-    .eq('wallet_address', walletAddress);
+  try {
+    // Delete existing stake accounts for this wallet before inserting new ones
+    const { error: deleteError } = await supabase
+      .from('stake_accounts')
+      .delete()
+      .eq('wallet_address', walletAddress);
 
-  if (deleteError) {
-    console.error('Error deleting existing stake accounts:', deleteError);
-  }
+    if (deleteError) {
+      console.error('Error deleting existing stake accounts:', deleteError);
+      throw deleteError;
+    }
 
-  // Prepare stake accounts for insertion with proper status mapping
-  const stakeAccountsToInsert = accounts.map(account => ({
-    wallet_address: walletAddress,
-    stake_account: account.stake_account,
-    sol_balance: account.sol_balance,
-    status: mapStakeAccountStatus(account.status),
-    delegated_stake_amount: account.delegated_stake_amount,
-    total_reward: account.total_reward,
-    voter: account.voter,
-    type: account.type,
-    active_stake_amount: account.active_stake_amount,
-    activation_epoch: account.activation_epoch,
-    role: account.role
-  }));
+    // Prepare stake accounts for insertion with proper status mapping
+    const stakeAccountsToInsert = accounts.map(account => ({
+      wallet_address: walletAddress,
+      stake_account: account.stake_account,
+      sol_balance: account.sol_balance,
+      status: mapStakeAccountStatus(account.status),
+      delegated_stake_amount: account.delegated_stake_amount,
+      total_reward: account.total_reward,
+      voter: account.voter,
+      type: account.type,
+      active_stake_amount: account.active_stake_amount,
+      activation_epoch: account.activation_epoch,
+      role: account.role
+    }));
 
-  // Insert new stake accounts
-  const { error } = await supabase
-    .from('stake_accounts')
-    .insert(stakeAccountsToInsert);
+    // Insert new stake accounts
+    const { error } = await supabase
+      .from('stake_accounts')
+      .insert(stakeAccountsToInsert);
 
-  if (error) {
-    console.error('Error storing stake accounts:', error);
+    if (error) {
+      console.error('Error storing stake accounts:', error);
+      throw error;
+    }
+  } catch (error) {
+    // Re-throw the error to be caught by the calling function
+    throw error;
   }
 };
 
 export const getStoredStakeAccounts = async (walletAddress: string) => {
-  const { data, error } = await supabase
-    .from('stake_accounts')
-    .select('*')
-    .eq('wallet_address', walletAddress);
+  try {
+    const { data, error } = await supabase
+      .from('stake_accounts')
+      .select('*')
+      .eq('wallet_address', walletAddress);
 
-  if (error) {
-    console.error('Error retrieving stake accounts:', error);
+    if (error) {
+      console.error('Error retrieving stake accounts:', error);
+      return [];
+    }
+
+    return data;
+  } catch (err) {
+    console.error('Exception retrieving stake accounts:', err);
     return [];
   }
-
-  return data;
 };

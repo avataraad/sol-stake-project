@@ -8,7 +8,7 @@ const SOLSCAN_API_URL = 'https://pro-api.solscan.io/v2.0/account/stake';
 // Add your Solscan API token here
 const SOLSCAN_API_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjcmVhdGVkQXQiOjE3NDQ4Mzc3MTcyODksImVtYWlsIjoiZXJpYy5rdWhuQGdlbWluaS5jb20iLCJhY3Rpb24iOiJ0b2tlbi1hcGkiLCJhcGlWZXJzaW9uIjoidjIiLCJpYXQiOjE3NDQ4Mzc3MTd9.jrnAu5QlIHFbkjIiBIKEpFronu7cub9HbUNGJZc7e8M";
 
-export const fetchStakeAccounts = async (address: string, page = 1, pageSize = 40): Promise<SolscanResponse> => {
+export const fetchStakeAccounts = async (address: string, page = 1, pageSize = 50): Promise<SolscanResponse> => {
   // Add query parameters for pagination
   const url = new URL(SOLSCAN_API_URL);
   url.searchParams.append('address', address);
@@ -24,29 +24,29 @@ export const fetchStakeAccounts = async (address: string, page = 1, pageSize = 4
     }
   };
   
-  const response = await fetch(url.toString(), requestOptions);
+  try {
+    const response = await fetch(url.toString(), requestOptions);
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error(`Failed to fetch stake accounts: ${response.status} ${response.statusText}`, errorText);
-    throw new Error(`Failed to fetch stake accounts: ${response.status} ${errorText}`);
-  }
-
-  const data = await response.json();
-  console.log(`Successfully fetched stake accounts for page ${page}:`, data);
-
-  // Try to store fetched stake accounts in Supabase
-  if (data.data && data.data.length > 0) {
-    try {
-      await storeStakeAccounts(address, data.data);
-    } catch (error) {
-      // Log the error but continue with the flow
-      console.warn('Error storing stake accounts in Supabase (RLS policy may be restricting access):', error);
-      console.info('Continuing with API response data without storing in database');
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Failed to fetch stake accounts: ${response.status} ${response.statusText}`, errorText);
+      throw new Error(`Failed to fetch stake accounts: ${response.status} ${errorText}`);
     }
-  }
 
-  return data;
+    const data = await response.json();
+    console.log(`Successfully fetched stake accounts for page ${page}:`, {
+      page,
+      dataLength: data.data?.length || 0,
+      hasNextPage: data.metadata?.hasNextPage,
+      nextPage: data.metadata?.nextPage,
+      totalItems: data.metadata?.totalItems
+    });
+
+    return data;
+  } catch (error) {
+    console.error(`Error fetching stake accounts page ${page}:`, error);
+    throw error;
+  }
 };
 
 // Helper function to fetch all pages of stake accounts
@@ -54,34 +54,52 @@ export const fetchAllStakeAccountPages = async (address: string): Promise<StakeA
   let currentPage = 1;
   let allAccounts: StakeAccount[] = [];
   let hasMorePages = true;
+  const pageSize = 100; // Increased page size for efficiency
   
   console.log('Starting to fetch all stake account pages');
   
-  while (hasMorePages) {
-    console.log(`Fetching stake accounts page ${currentPage}`);
-    const response = await fetchStakeAccounts(address, currentPage, 40);
-    
-    if (response.data && response.data.length > 0) {
-      console.log(`Received ${response.data.length} accounts from page ${currentPage}`);
-      allAccounts = [...allAccounts, ...response.data];
+  try {
+    while (hasMorePages) {
+      console.log(`Fetching stake accounts page ${currentPage}`);
+      const response = await fetchStakeAccounts(address, currentPage, pageSize);
       
-      // Check if there are more pages
-      if (response.metadata && response.metadata.hasNextPage) {
-        currentPage++;
-        console.log(`More pages available, moving to page ${currentPage}`);
+      if (response.data && response.data.length > 0) {
+        console.log(`Received ${response.data.length} accounts from page ${currentPage}`);
+        allAccounts = [...allAccounts, ...response.data];
+        
+        // Check if there are more pages
+        if (response.metadata && response.metadata.hasNextPage === true) {
+          currentPage++;
+          console.log(`More pages available, moving to page ${currentPage}`);
+        } else {
+          hasMorePages = false;
+          console.log('No more pages available - metadata indicates last page');
+        }
       } else {
+        // No data or empty array, stop pagination
         hasMorePages = false;
-        console.log('No more pages available');
+        console.log('No data received or empty array, stopping pagination');
       }
-    } else {
-      // No data or empty array, stop pagination
-      hasMorePages = false;
-      console.log('No data received or empty array, stopping pagination');
     }
+    
+    console.log(`Total stake accounts fetched across all pages: ${allAccounts.length}`);
+    
+    // Try to store all fetched accounts in Supabase
+    if (allAccounts.length > 0) {
+      try {
+        await storeStakeAccounts(address, allAccounts);
+        console.log(`Successfully stored ${allAccounts.length} stake accounts in Supabase`);
+      } catch (error) {
+        console.warn('Error storing stake accounts in Supabase (RLS policy may be restricting access):', error);
+        console.info('Continuing with API response data without storing in database');
+      }
+    }
+    
+    return allAccounts;
+  } catch (error) {
+    console.error('Error in fetchAllStakeAccountPages:', error);
+    throw error;
   }
-  
-  console.log(`Total stake accounts fetched across all pages: ${allAccounts.length}`);
-  return allAccounts;
 };
 
 // Helper function to map status to enum

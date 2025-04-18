@@ -31,11 +31,21 @@ export const useStakeAccounts = () => {
       if (storedAccounts.length > 0) {
         console.log('Found stored accounts:', storedAccounts.length);
         setStakeAccounts(storedAccounts as StakeAccount[]);
+        
+        // Show a toast to let the user know we're using cached data initially
+        toast({
+          title: "Loading",
+          description: `Found ${storedAccounts.length} cached stake accounts. Refreshing data...`,
+        });
       } else {
         console.log('No stored accounts found');
+        toast({
+          title: "Loading",
+          description: "Fetching stake accounts. This might take a moment...",
+        });
       }
 
-      // Then fetch and update from Solscan API using our new function that handles all pages
+      // Then fetch and update from Solscan API using our function that handles all pages
       console.log('Fetching all stake accounts from Solscan API');
       try {
         // Fetch all pages of stake accounts

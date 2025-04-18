@@ -13,7 +13,9 @@ const StakingMetrics = () => {
 
   useEffect(() => {
     // Automatically fetch stake accounts when the component mounts
-    fetchAllStakeAccounts(walletAddress);
+    if (walletAddress) {
+      fetchAllStakeAccounts(walletAddress);
+    }
   }, []);
 
   const totalStakedBalance = stakeAccounts.reduce(
@@ -46,4 +48,3 @@ const StakingMetrics = () => {
 };
 
 export default StakingMetrics;
-

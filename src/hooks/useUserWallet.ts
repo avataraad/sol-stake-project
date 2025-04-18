@@ -6,11 +6,19 @@ import { useToast } from "@/hooks/use-toast";
 export const useUserWallet = () => {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
+    // Check authentication status when the component mounts
+    checkAuthStatus();
     fetchUserWallet();
   }, []);
+
+  const checkAuthStatus = async () => {
+    const { data } = await supabase.auth.getSession();
+    setIsAuthenticated(!!data.session);
+  };
 
   const fetchUserWallet = async () => {
     try {
@@ -40,7 +48,10 @@ export const useUserWallet = () => {
       // First check if we have a user
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       
-      if (userError) throw userError;
+      if (userError) {
+        console.error('Auth error:', userError);
+        throw new Error('Authentication error: ' + userError.message);
+      }
       
       if (!user) {
         // If no authenticated user, try inserting without user_id
@@ -85,6 +96,7 @@ export const useUserWallet = () => {
   return {
     walletAddress,
     isLoading,
+    isAuthenticated,
     updateWallet
   };
 };

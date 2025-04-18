@@ -10,6 +10,7 @@ export const useStakeAccounts = () => {
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [hasNextPage, setHasNextPage] = useState(false);
+  const [lastFetchedAddress, setLastFetchedAddress] = useState('');
   const { toast } = useToast();
   const PAGE_SIZE = 40;
 
@@ -26,6 +27,7 @@ export const useStakeAccounts = () => {
     setIsLoading(true);
     setError(null);
     setCurrentPage(page);
+    setLastFetchedAddress(address);
     
     try {
       console.log('Fetching stake accounts for page:', page);

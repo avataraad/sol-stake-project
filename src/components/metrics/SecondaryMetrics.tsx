@@ -1,26 +1,14 @@
 
 import { Trophy, DollarSign, Calendar } from "lucide-react";
 import MetricCard from "./MetricCard";
-import { useState, useEffect } from "react";
 
 interface SecondaryMetricsProps {
   lifetimeRewards: number;
 }
 
 const SecondaryMetrics = ({ lifetimeRewards }: SecondaryMetricsProps) => {
-  const [stakeDate, setStakeDate] = useState<string>("Not started");
-  
-  // Ensure lifetimeRewards is a valid number and console log for debugging
-  console.log("Lifetime rewards received:", lifetimeRewards);
-  
-  const numericLifetimeRewards = typeof lifetimeRewards === 'number' && !isNaN(lifetimeRewards) 
-    ? lifetimeRewards 
-    : 0;
-  
-  console.log("Numeric lifetime rewards after validation:", numericLifetimeRewards);
-    
-  const formattedRewards = (numericLifetimeRewards / 1e9).toFixed(2);
-  const feeAmount = (numericLifetimeRewards * 0.05 / 1e9).toFixed(2);
+  const formattedRewards = (lifetimeRewards / 1e9).toFixed(2);
+  const feeAmount = (lifetimeRewards * 0.05 / 1e9).toFixed(2);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -38,7 +26,7 @@ const SecondaryMetrics = ({ lifetimeRewards }: SecondaryMetricsProps) => {
       />
       <MetricCard
         title="Staking Since"
-        value={stakeDate}
+        value="Not started"
         subtitle="First staking activity date"
         icon={<Calendar className="text-blue-400" size={20} />}
       />

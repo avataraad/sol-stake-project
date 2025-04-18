@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { StakeAccount } from '@/types/solana';
 import { fetchStakeAccounts } from '@/services/solscan';
@@ -65,16 +66,6 @@ export const useStakeAccounts = () => {
       const allAccounts = await loadAllPages(address);
       setStakeAccounts(allAccounts);
       
-      // Debug the total rewards
-      const totalRewards = allAccounts.reduce((sum, account) => {
-        if (account.total_reward && typeof account.total_reward === 'number') {
-          return sum + account.total_reward;
-        }
-        return sum;
-      }, 0);
-      console.log(`Total rewards calculated: ${totalRewards}`);
-      console.log(`Number of accounts: ${allAccounts.length}`);
-      
       if (allAccounts.length > 0) {
         toast({
           title: "Success",
@@ -113,27 +104,11 @@ export const useStakeAccounts = () => {
   };
 
   const getTotalStakedBalance = useCallback(() => {
-    const total = stakeAccounts.reduce((sum, account) => {
-      const amount = typeof account.delegated_stake_amount === 'number' && !isNaN(account.delegated_stake_amount) 
-        ? account.delegated_stake_amount 
-        : 0;
-      return sum + amount;
-    }, 0);
-    console.log(`Total staked balance: ${total}`);
-    return total;
+    return stakeAccounts.reduce((sum, account) => sum + account.delegated_stake_amount, 0);
   }, [stakeAccounts]);
 
   const getLifetimeRewards = useCallback(() => {
-    const total = stakeAccounts.reduce((sum, account) => {
-      const reward = typeof account.total_reward === 'number' 
-        ? account.total_reward 
-        : 0;
-      
-      return sum + reward;
-    }, 0);
-    
-    console.log(`Final lifetime rewards calculated: ${total}`);
-    return total;
+    return stakeAccounts.reduce((sum, account) => sum + account.total_reward, 0);
   }, [stakeAccounts]);
 
   return {

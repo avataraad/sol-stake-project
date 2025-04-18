@@ -8,7 +8,7 @@ const SOLSCAN_API_URL = 'https://pro-api.solscan.io/v2.0/account/stake';
 // Add your Solscan API token here
 const SOLSCAN_API_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjcmVhdGVkQXQiOjE3NDQ4Mzc3MTcyODksImVtYWlsIjoiZXJpYy5rdWhuQGdlbWluaS5jb20iLCJhY3Rpb24iOiJ0b2tlbi1hcGkiLCJhcGlWZXJzaW9uIjoidjIiLCJpYXQiOjE3NDQ4Mzc3MTd9.jrnAu5QlIHFbkjIiBIKEpFronu7cub9HbUNGJZc7e8M";
 
-export const fetchStakeAccounts = async (address: string, page = 1, pageSize = 50): Promise<SolscanResponse> => {
+export const fetchStakeAccounts = async (address: string, page = 1, pageSize = 40): Promise<SolscanResponse> => {
   // Add query parameters for pagination
   const url = new URL(SOLSCAN_API_URL);
   url.searchParams.append('address', address);
@@ -54,7 +54,7 @@ export const fetchAllStakeAccountPages = async (address: string): Promise<StakeA
   let currentPage = 1;
   let allAccounts: StakeAccount[] = [];
   let hasMorePages = true;
-  const pageSize = 100; // Increased page size for efficiency
+  const pageSize = 40; // Using maximum allowed page size
   
   console.log('Starting to fetch all stake account pages');
   
@@ -67,7 +67,7 @@ export const fetchAllStakeAccountPages = async (address: string): Promise<StakeA
         console.log(`Received ${response.data.length} accounts from page ${currentPage}`);
         allAccounts = [...allAccounts, ...response.data];
         
-        // Check if there are more pages
+        // Check if there are more pages based on the response metadata
         if (response.metadata && response.metadata.hasNextPage === true) {
           currentPage++;
           console.log(`More pages available, moving to page ${currentPage}`);

@@ -69,7 +69,8 @@ export const fetchAllStakeAccountPages = async (address: string): Promise<StakeA
 
     while (hasMorePages) {
       console.log(`Fetching stake accounts page ${currentPage}`);
-      const response = await fetchStakeAccounts(address, currentPage, pageSize);
+      // Updated: Only passing address and page as parameters (removed pageSize)
+      const response = await fetchStakeAccounts(address, currentPage);
       
       if (response.data && response.data.length > 0) {
         console.log(`Processing ${response.data.length} accounts from page ${currentPage}`);

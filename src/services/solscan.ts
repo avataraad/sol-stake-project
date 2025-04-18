@@ -6,8 +6,11 @@ import { Database } from "@/integrations/supabase/types";
 const SOLSCAN_API_URL = 'https://pro-api.solscan.io/v2.0/account/stake';
 const SOLSCAN_API_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjcmVhdGVkQXQiOjE3NDQ4Mzc3MTcyODksImVtYWlsIjoiZXJpYy5rdWhuQGdlbWluaS5jb20iLCJhY3Rpb24iOiJ0b2tlbi1hcGkiLCJhcGlWZXJzaW9uIjoidjIiLCJpYXQiOjE3NDQ4Mzc3MTd9.jrnAu5QlIHFbkjIiBIKEpFronu7cub9HbUNGJZc7e8M";
 
-export const fetchStakeAccounts = async (address: string, page: number): Promise<SolscanResponse> => {
-  const pageSize = 40; // Fixed page size
+export const fetchStakeAccounts = async (address: string, page = 1): Promise<SolscanResponse> => {
+  // Always set page_size to 40
+  const pageSize = 40;
+
+  // Add query parameters for pagination
   const url = new URL(SOLSCAN_API_URL);
   url.searchParams.append('address', address);
   url.searchParams.append('page', page.toString());
@@ -44,14 +47,16 @@ export const fetchStakeAccounts = async (address: string, page: number): Promise
   }
 };
 
+// Helper function to fetch all pages of stake accounts
 export const fetchAllStakeAccountPages = async (address: string): Promise<StakeAccount[]> => {
   let currentPage = 1;
-  let hasMoreData = true;
+  const pageSize = 40; // Fixed page size as per API limit
+  let hasMorePages = true;
   
   console.log('Starting to fetch all stake account pages');
   
   try {
-    // First, clear existing records for this wallet
+    // First, clear existing stake accounts for this wallet
     const { error: deleteError } = await supabase
       .from('stake_accounts')
       .delete()
@@ -62,14 +67,15 @@ export const fetchAllStakeAccountPages = async (address: string): Promise<StakeA
       throw deleteError;
     }
 
-    while (hasMoreData) {
-      console.log(`Fetching page ${currentPage}`);
+    while (hasMorePages) {
+      console.log(`Fetching stake accounts page ${currentPage}`);
+      // Updated: Only passing address and page as parameters (removed pageSize)
       const response = await fetchStakeAccounts(address, currentPage);
       
       if (response.data && response.data.length > 0) {
-        console.log(`Received ${response.data.length} accounts from page ${currentPage}`);
+        console.log(`Processing ${response.data.length} accounts from page ${currentPage}`);
         
-        // Map and store the current batch
+        // Map and store current page of accounts
         const stakeAccountsToInsert = response.data.map(account => ({
           wallet_address: address,
           stake_account: account.stake_account,
@@ -84,33 +90,33 @@ export const fetchAllStakeAccountPages = async (address: string): Promise<StakeA
           role: account.role
         }));
 
-        // Insert current batch
-        const { error } = await supabase
+        // Insert this page's accounts into database
+        const { error: insertError } = await supabase
           .from('stake_accounts')
           .insert(stakeAccountsToInsert);
 
-        if (error) {
-          console.error(`Error storing stake accounts for page ${currentPage}:`, error);
-          throw error;
+        if (insertError) {
+          console.error(`Error storing stake accounts for page ${currentPage}:`, insertError);
+          throw insertError;
         }
 
         console.log(`Successfully stored ${stakeAccountsToInsert.length} accounts from page ${currentPage}`);
-        currentPage++;
+        currentPage++; // Move to next page
       } else {
-        // No more data to fetch
-        hasMoreData = false;
-        console.log('No more pages to fetch');
+        // No more data received, stop pagination
+        hasMorePages = false;
+        console.log('No more data received, stopping pagination');
       }
     }
     
-    // Fetch all stored accounts
+    // Retrieve all stored accounts
     const { data: allStoredAccounts, error: fetchError } = await supabase
       .from('stake_accounts')
       .select('*')
       .eq('wallet_address', address);
 
     if (fetchError) {
-      console.error('Error fetching stored accounts:', fetchError);
+      console.error('Error retrieving stored stake accounts:', fetchError);
       throw fetchError;
     }
 
@@ -136,7 +142,7 @@ const mapStakeAccountStatus = (status: string): Database["public"]["Enums"]["sta
     case 'activating':
       return 'activating';
     default:
-      return 'inactive';
+      return 'inactive'; // Default to inactive if status is not recognized
   }
 };
 
@@ -158,4 +164,3 @@ export const getStoredStakeAccounts = async (walletAddress: string) => {
     return [];
   }
 };
-

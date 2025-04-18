@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useStakeAccounts } from '@/hooks/useStakeAccounts';
 import DashboardHeader from './metrics/DashboardHeader';
 import MainMetrics from './metrics/MainMetrics';
@@ -8,8 +8,13 @@ import StakingCharts from './metrics/StakingCharts';
 import StakeAccountsTable from './StakeAccountsTable';
 
 const StakingMetrics = () => {
-  const [walletAddress, setWalletAddress] = useState('');
+  const [walletAddress, setWalletAddress] = useState('CFATy5hmHLpiEdy9HgHFGzUPYFckQgBdwAUrP6xc3jKq');
   const { stakeAccounts, isLoading, fetchAllStakeAccounts } = useStakeAccounts();
+
+  useEffect(() => {
+    // Automatically fetch stake accounts when the component mounts
+    fetchAllStakeAccounts(walletAddress);
+  }, []);
 
   const totalStakedBalance = stakeAccounts.reduce(
     (sum, account) => sum + account.delegated_stake_amount,
@@ -41,3 +46,4 @@ const StakingMetrics = () => {
 };
 
 export default StakingMetrics;
+

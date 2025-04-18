@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { StakeAccount } from '@/types/solana';
 import { fetchStakeAccounts } from '@/services/solscan';
@@ -108,7 +107,12 @@ export const useStakeAccounts = () => {
   }, [stakeAccounts]);
 
   const getLifetimeRewards = useCallback(() => {
-    return stakeAccounts.reduce((sum, account) => sum + account.total_reward, 0);
+    return stakeAccounts.reduce((sum, account) => {
+      const reward = typeof account.total_reward === 'number' && !isNaN(account.total_reward)
+        ? account.total_reward
+        : 0;
+      return sum + reward;
+    }, 0);
   }, [stakeAccounts]);
 
   return {

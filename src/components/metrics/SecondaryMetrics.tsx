@@ -1,5 +1,5 @@
 
-import { Trophy, DollarSign, Calendar } from "lucide-react";
+import { Trophy, DollarSign, Gift } from "lucide-react";
 import MetricCard from "./MetricCard";
 
 interface SecondaryMetricsProps {
@@ -25,10 +25,10 @@ const SecondaryMetrics = ({ lifetimeRewards }: SecondaryMetricsProps) => {
         icon={<DollarSign className="text-orange-400" size={20} />}
       />
       <MetricCard
-        title="Staking Since"
-        value="Not started"
-        subtitle="First staking activity date"
-        icon={<Calendar className="text-blue-400" size={20} />}
+        title="Rewards (30d)"
+        value="0.00 SOL"
+        change="+0.0% from previous 30d"
+        icon={<Gift className="text-violet-400" size={20} />}
       />
     </div>
   );

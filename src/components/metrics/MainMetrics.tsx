@@ -1,5 +1,5 @@
 
-import { DollarSign, Hourglass, Percent, Gift } from "lucide-react";
+import { DollarSign, Hourglass, Percent, Trophy, Gift } from "lucide-react";
 import MetricCard from "./MetricCard";
 
 interface MainMetricsProps {
@@ -8,7 +8,7 @@ interface MainMetricsProps {
 
 const MainMetrics = ({ totalStakedBalance }: MainMetricsProps) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <MetricCard
         title="Staked Balance"
         value={`${(totalStakedBalance / 1e9).toFixed(2)} SOL`}
@@ -25,12 +25,6 @@ const MainMetrics = ({ totalStakedBalance }: MainMetricsProps) => {
         value="0.00%"
         change="+0.0% from previous 30d"
         icon={<Percent className="text-emerald-400" size={20} />}
-      />
-      <MetricCard
-        title="Rewards (30d)"
-        value="0.00 SOL"
-        change="+0.0% from previous 30d"
-        icon={<Gift className="text-violet-400" size={20} />}
       />
     </div>
   );

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useStakeAccounts } from '@/hooks/useStakeAccounts';
 import DashboardHeader from './metrics/DashboardHeader';
@@ -18,6 +17,7 @@ const StakingMetrics = () => {
     handlePageChange,
     getTotalStakedBalance,
     getLifetimeRewards,
+    totalPages,
   } = useStakeAccounts();
 
   useEffect(() => {
@@ -48,6 +48,7 @@ const StakingMetrics = () => {
         currentPage={currentPage}
         onPageChange={handlePageChange}
         hasNextPage={hasNextPage}
+        totalPages={totalPages}
       />
     </div>
   );

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -27,6 +26,7 @@ interface StakeAccountsTableProps {
   currentPage: number;
   onPageChange: (page: number) => void;
   hasNextPage?: boolean;
+  totalPages: number;
 }
 
 const StakeAccountsTable = ({ 
@@ -34,7 +34,8 @@ const StakeAccountsTable = ({
   isLoading, 
   currentPage,
   onPageChange,
-  hasNextPage 
+  hasNextPage,
+  totalPages 
 }: StakeAccountsTableProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<keyof StakeAccount | null>(null);
@@ -44,7 +45,6 @@ const StakeAccountsTable = ({
     account.stake_account.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Sort accounts
   const sortedAccounts = [...filteredAccounts].sort((a, b) => {
     if (!sortField) return 0;
     
@@ -62,7 +62,6 @@ const StakeAccountsTable = ({
       bStr.localeCompare(aStr);
   });
 
-  // Handle sort toggle
   const handleSort = (field: keyof StakeAccount) => {
     if (sortField === field) {
       setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
@@ -148,7 +147,10 @@ const StakeAccountsTable = ({
           </TableBody>
         </Table>
       </div>
-      <div className="mt-4">
+      <div className="mt-4 flex items-center justify-between">
+        <p className="text-sm text-gray-500">
+          Page {currentPage} of {totalPages || 1}
+        </p>
         <Pagination>
           <PaginationContent>
             <PaginationItem>

@@ -53,7 +53,6 @@ export const useStakeAccounts = () => {
     setLastFetchedAddress(address);
     
     try {
-      // First load the current page for immediate display
       const currentPageResponse = await fetchStakeAccounts(address, page, PAGE_SIZE);
       
       if (currentPageResponse.data) {
@@ -61,7 +60,6 @@ export const useStakeAccounts = () => {
         setHasNextPage(currentPageResponse.data.length === PAGE_SIZE);
       }
 
-      // Start background loading of all pages
       const allAccounts = await loadAllPages(address);
       setStakeAccounts(allAccounts);
       
@@ -90,6 +88,10 @@ export const useStakeAccounts = () => {
     }
   };
 
+  const getTotalPages = useCallback(() => {
+    return Math.ceil(stakeAccounts.length / PAGE_SIZE);
+  }, [stakeAccounts.length]);
+
   const handlePageChange = (page: number) => {
     if (isLoading) return;
     
@@ -97,7 +99,6 @@ export const useStakeAccounts = () => {
     const endIndex = startIndex + PAGE_SIZE;
     setCurrentPage(page);
     
-    // Update displayed accounts from the full dataset
     setDisplayedAccounts(stakeAccounts.slice(startIndex, endIndex));
     setHasNextPage(endIndex < stakeAccounts.length);
   };
@@ -114,8 +115,8 @@ export const useStakeAccounts = () => {
   }, [stakeAccounts]);
 
   return {
-    stakeAccounts: displayedAccounts, // For UI display
-    allStakeAccounts: stakeAccounts, // Complete dataset
+    stakeAccounts: displayedAccounts,
+    allStakeAccounts: stakeAccounts,
     isLoading,
     error,
     currentPage,
@@ -125,5 +126,6 @@ export const useStakeAccounts = () => {
     PAGE_SIZE,
     getTotalStakedBalance,
     getLifetimeRewards,
+    totalPages: getTotalPages(),
   };
 };

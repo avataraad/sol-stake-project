@@ -10,28 +10,25 @@ import StakeAccountsTable from './StakeAccountsTable';
 const StakingMetrics = () => {
   const [walletAddress, setWalletAddress] = useState('CFATy5hmHLpiEdy9HgHFGzUPYFckQgBdwAUrP6xc3jKq');
   const { 
-    stakeAccounts, 
+    stakeAccounts,
     isLoading, 
     currentPage,
     hasNextPage,
     fetchAllStakeAccounts,
     handlePageChange,
+    getTotalStakedBalance,
+    getLifetimeRewards,
   } = useStakeAccounts();
 
   useEffect(() => {
     if (walletAddress) {
-      fetchAllStakeAccounts(walletAddress, 1); // Always start from page 1
+      fetchAllStakeAccounts(walletAddress, 1);
     }
   }, [walletAddress]);
 
-  const totalStakedBalance = stakeAccounts.reduce(
-    (sum, account) => sum + account.delegated_stake_amount,
-    0
-  );
-
   const handleTrack = () => {
     if (!walletAddress) return;
-    fetchAllStakeAccounts(walletAddress, 1); // Reset to page 1 when tracking new address
+    fetchAllStakeAccounts(walletAddress, 1);
   };
 
   return (
@@ -42,8 +39,8 @@ const StakingMetrics = () => {
         onTrack={handleTrack}
         isLoading={isLoading}
       />
-      <MainMetrics totalStakedBalance={totalStakedBalance} />
-      <SecondaryMetrics />
+      <MainMetrics totalStakedBalance={getTotalStakedBalance()} />
+      <SecondaryMetrics lifetimeRewards={getLifetimeRewards()} />
       <StakingCharts />
       <StakeAccountsTable 
         stakeAccounts={stakeAccounts}

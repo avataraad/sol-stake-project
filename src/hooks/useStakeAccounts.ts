@@ -125,14 +125,11 @@ export const useStakeAccounts = () => {
 
   const getLifetimeRewards = useCallback(() => {
     const total = stakeAccounts.reduce((sum, account) => {
-      const reward = account.total_reward === undefined || 
-                     account.total_reward === null || 
-                     account.total_reward === 'n/a' ||
-                     (typeof account.total_reward === 'number' && !isNaN(account.total_reward)) 
-        ? (account.total_reward === 'n/a' ? 0 : account.total_reward || 0)
+      const reward = typeof account.total_reward === 'number' 
+        ? account.total_reward 
         : 0;
       
-      return sum + (Number(reward) || 0);
+      return sum + reward;
     }, 0);
     
     console.log(`Final lifetime rewards calculated: ${total}`);

@@ -9,10 +9,16 @@ import StakeAccountsTable from './StakeAccountsTable';
 
 const StakingMetrics = () => {
   const [walletAddress, setWalletAddress] = useState('CFATy5hmHLpiEdy9HgHFGzUPYFckQgBdwAUrP6xc3jKq');
-  const { stakeAccounts, isLoading, fetchAllStakeAccounts } = useStakeAccounts();
+  const { 
+    stakeAccounts, 
+    isLoading, 
+    currentPage,
+    hasNextPage,
+    fetchAllStakeAccounts,
+    handlePageChange 
+  } = useStakeAccounts();
 
   useEffect(() => {
-    // Automatically fetch stake accounts when the component mounts
     if (walletAddress) {
       fetchAllStakeAccounts(walletAddress);
     }
@@ -42,6 +48,9 @@ const StakingMetrics = () => {
       <StakeAccountsTable 
         stakeAccounts={stakeAccounts}
         isLoading={isLoading}
+        currentPage={currentPage}
+        onPageChange={handlePageChange}
+        hasNextPage={hasNextPage}
       />
     </div>
   );

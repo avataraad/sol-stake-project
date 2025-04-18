@@ -1,16 +1,19 @@
 
 import { useState } from 'react';
 import { StakeAccount } from '@/types/solana';
-import { fetchAllStakeAccountPages, getStoredStakeAccounts } from '@/services/solscan';
+import { fetchStakeAccounts } from '@/services/solscan';
 import { useToast } from "@/hooks/use-toast";
 
 export const useStakeAccounts = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [stakeAccounts, setStakeAccounts] = useState<StakeAccount[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasNextPage, setHasNextPage] = useState(false);
   const { toast } = useToast();
+  const PAGE_SIZE = 40;
 
-  const fetchAllStakeAccounts = async (address: string) => {
+  const fetchAllStakeAccounts = async (address: string, page = 1) => {
     if (!address) {
       toast({
         title: "Error",
@@ -22,68 +25,31 @@ export const useStakeAccounts = () => {
     
     setIsLoading(true);
     setError(null);
+    setCurrentPage(page);
     
     try {
-      // First, try to get stored accounts
-      console.log('Fetching stored stake accounts for address:', address);
-      const storedAccounts = await getStoredStakeAccounts(address);
+      console.log('Fetching stake accounts for page:', page);
+      const response = await fetchStakeAccounts(address, page, PAGE_SIZE);
       
-      if (storedAccounts.length > 0) {
-        console.log('Found stored accounts:', storedAccounts.length);
-        setStakeAccounts(storedAccounts as StakeAccount[]);
+      if (response.data) {
+        setStakeAccounts(response.data);
+        setHasNextPage(response.data.length === PAGE_SIZE);
         
-        // Show a toast to let the user know we're using cached data initially
-        toast({
-          title: "Loading",
-          description: `Found ${storedAccounts.length} cached stake accounts. Refreshing data...`,
-        });
-      } else {
-        console.log('No stored accounts found');
-        toast({
-          title: "Loading",
-          description: "Fetching stake accounts. This might take a moment...",
-        });
-      }
-
-      // Then fetch and update from Solscan API using our function that handles all pages
-      console.log('Fetching all stake accounts from Solscan API');
-      try {
-        // Fetch all pages of stake accounts
-        const allAccounts = await fetchAllStakeAccountPages(address);
-        
-        console.log(`Total accounts fetched across all pages: ${allAccounts.length}`);
-        if (allAccounts.length > 0) {
-          setStakeAccounts(allAccounts);
+        if (response.data.length > 0) {
           toast({
             title: "Success",
-            description: `Found ${allAccounts.length} stake accounts`,
-          });
-        } else if (storedAccounts.length === 0) {
-          toast({
-            title: "Information",
-            description: "No stake accounts found for this address.",
-          });
-        }
-      } catch (apiError) {
-        console.error('Error fetching from Solscan API:', apiError);
-        // Only show an error toast if we also don't have stored accounts
-        if (storedAccounts.length === 0) {
-          toast({
-            title: "Error",
-            description: apiError instanceof Error ? apiError.message : "Failed to fetch from Solscan API. Using cached data if available.",
-            variant: "destructive",
+            description: `Found ${response.data.length} stake accounts on page ${page}`,
           });
         } else {
           toast({
-            title: "Warning",
-            description: "Could not refresh data from Solscan. Using cached data instead.",
-            variant: "default",
+            title: "Information",
+            description: "No more stake accounts found.",
           });
         }
       }
     } catch (error) {
-      console.error('Error in fetch process:', error);
-      setError(error instanceof Error ? error.message : 'Unknown error occurred');
+      console.error('Error fetching stake accounts:', error);
+      setError(error instanceof Error ? error.message : 'Failed to fetch stake accounts');
       
       toast({
         title: "Error",
@@ -95,10 +61,18 @@ export const useStakeAccounts = () => {
     }
   };
 
+  const handlePageChange = (page: number) => {
+    if (isLoading) return;
+    fetchAllStakeAccounts(lastFetchedAddress, page);
+  };
+
   return {
     stakeAccounts,
     isLoading,
     error,
+    currentPage,
+    hasNextPage,
     fetchAllStakeAccounts,
+    handlePageChange,
   };
 };

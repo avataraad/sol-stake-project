@@ -24,17 +24,22 @@ import { StakeAccount } from '@/types/solana';
 interface StakeAccountsTableProps {
   stakeAccounts: StakeAccount[];
   isLoading: boolean;
+  currentPage: number;
+  onPageChange: (page: number) => void;
+  hasNextPage?: boolean;
 }
 
-const StakeAccountsTable = ({ stakeAccounts, isLoading }: StakeAccountsTableProps) => {
-  const [currentPage, setCurrentPage] = useState(1);
+const StakeAccountsTable = ({ 
+  stakeAccounts, 
+  isLoading, 
+  currentPage,
+  onPageChange,
+  hasNextPage 
+}: StakeAccountsTableProps) => {
+  const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<keyof StakeAccount | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-  const [searchTerm, setSearchTerm] = useState('');
   
-  const itemsPerPage = 10;
-  
-  // Filter accounts based on search term
   const filteredAccounts = stakeAccounts.filter(account => 
     account.stake_account.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -57,11 +62,6 @@ const StakeAccountsTable = ({ stakeAccounts, isLoading }: StakeAccountsTableProp
       bStr.localeCompare(aStr);
   });
 
-  // Calculate pagination
-  const totalPages = Math.ceil(sortedAccounts.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedAccounts = sortedAccounts.slice(startIndex, startIndex + itemsPerPage);
-
   // Handle sort toggle
   const handleSort = (field: keyof StakeAccount) => {
     if (sortField === field) {
@@ -70,72 +70,6 @@ const StakeAccountsTable = ({ stakeAccounts, isLoading }: StakeAccountsTableProp
       setSortField(field);
       setSortDirection('asc');
     }
-  };
-
-  // Generate pagination items
-  const generatePaginationItems = () => {
-    const items = [];
-    const maxVisiblePages = 5;
-    
-    // Always show first page
-    items.push(
-      <PaginationItem key="1">
-        <PaginationLink
-          onClick={() => setCurrentPage(1)}
-          isActive={currentPage === 1}
-        >
-          1
-        </PaginationLink>
-      </PaginationItem>
-    );
-
-    // Add ellipsis if needed
-    if (currentPage > 3) {
-      items.push(
-        <PaginationItem key="start-ellipsis">
-          <PaginationEllipsis />
-        </PaginationItem>
-      );
-    }
-
-    // Add pages around current page
-    for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
-      items.push(
-        <PaginationItem key={i}>
-          <PaginationLink
-            onClick={() => setCurrentPage(i)}
-            isActive={currentPage === i}
-          >
-            {i}
-          </PaginationLink>
-        </PaginationItem>
-      );
-    }
-
-    // Add ending ellipsis if needed
-    if (currentPage < totalPages - 2) {
-      items.push(
-        <PaginationItem key="end-ellipsis">
-          <PaginationEllipsis />
-        </PaginationItem>
-      );
-    }
-
-    // Always show last page if there is more than one page
-    if (totalPages > 1) {
-      items.push(
-        <PaginationItem key={totalPages}>
-          <PaginationLink
-            onClick={() => setCurrentPage(totalPages)}
-            isActive={currentPage === totalPages}
-          >
-            {totalPages}
-          </PaginationLink>
-        </PaginationItem>
-      );
-    }
-
-    return items;
   };
 
   return (
@@ -187,7 +121,7 @@ const StakeAccountsTable = ({ stakeAccounts, isLoading }: StakeAccountsTableProp
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginatedAccounts.length === 0 ? (
+            {sortedAccounts.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} className="text-center py-8 text-gray-400">
                   {isLoading 
@@ -198,7 +132,7 @@ const StakeAccountsTable = ({ stakeAccounts, isLoading }: StakeAccountsTableProp
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedAccounts.map((account) => (
+              sortedAccounts.map((account) => (
                 <TableRow key={account.stake_account}>
                   <TableCell className="font-mono text-sm">{account.stake_account}</TableCell>
                   <TableCell>{(account.sol_balance / 1e9).toFixed(2)} SOL</TableCell>
@@ -214,29 +148,29 @@ const StakeAccountsTable = ({ stakeAccounts, isLoading }: StakeAccountsTableProp
           </TableBody>
         </Table>
       </div>
-      {sortedAccounts.length > itemsPerPage && (
-        <div className="mt-4">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious 
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                  aria-disabled={currentPage === 1}
-                  className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
-                />
-              </PaginationItem>
-              {generatePaginationItems()}
-              <PaginationItem>
-                <PaginationNext 
-                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                  aria-disabled={currentPage === totalPages}
-                  className={currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
-      )}
+      <div className="mt-4">
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious 
+                onClick={() => currentPage > 1 && onPageChange(currentPage - 1)}
+                className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
+              />
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationLink isActive={true}>
+                {currentPage}
+              </PaginationLink>
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationNext 
+                onClick={() => hasNextPage && onPageChange(currentPage + 1)}
+                className={!hasNextPage ? 'pointer-events-none opacity-50' : ''}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </div>
     </div>
   );
 };

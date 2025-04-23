@@ -9,6 +9,9 @@ interface TruncatedAddressProps {
 
 export const TruncatedAddress = ({ address }: TruncatedAddressProps) => {
   const { toast } = useToast();
+  const start = address.slice(0, 5);
+  const middle = address.slice(5, -5);
+  const end = address.slice(-5);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(address);
@@ -20,7 +23,11 @@ export const TruncatedAddress = ({ address }: TruncatedAddressProps) => {
 
   return (
     <div className="flex items-center gap-2">
-      <span className="font-mono text-sm truncate">{address}</span>
+      <div className="font-mono text-sm leading-tight break-all">
+        <span>{start}</span>
+        <span className="text-muted-foreground">{middle}</span>
+        <span>{end}</span>
+      </div>
       <Button
         variant="ghost"
         size="icon"

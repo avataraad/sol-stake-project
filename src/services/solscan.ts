@@ -111,6 +111,8 @@ export const fetchWalletPortfolio = async (address: string): Promise<SolscanPort
   const url = new URL('https://pro-api.solscan.io/v2.0/account/portfolio');
   url.searchParams.append('address', address);
 
+  console.log(`Fetching wallet portfolio for address: ${address}`);
+  
   const requestOptions = {
     method: 'GET',
     headers: {
@@ -118,12 +120,29 @@ export const fetchWalletPortfolio = async (address: string): Promise<SolscanPort
     }
   };
 
-  const response = await fetch(url.toString(), requestOptions);
-  if (!response.ok) {
-    throw new Error('Failed to fetch wallet portfolio');
-  }
+  try {
+    const response = await fetch(url.toString(), requestOptions);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Portfolio API error: ${response.status} ${errorText}`);
+      throw new Error(`Failed to fetch wallet portfolio: ${response.status} ${errorText}`);
+    }
 
-  return response.json();
+    const data = await response.json();
+    console.log('Portfolio API response:', JSON.stringify(data, null, 2));
+    
+    if (data?.data?.native_balance?.balance) {
+      console.log(`Native balance from API: ${data.data.native_balance.balance} (${data.data.native_balance.balance / 1e9} SOL)`);
+    } else {
+      console.warn('Native balance not found in API response or has unexpected structure:', data);
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error in fetchWalletPortfolio:', error);
+    throw error;
+  }
 };
 
 const mapStakeAccountStatus = (status: string): Database["public"]["Enums"]["stake_account_status"] => {

@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { StakeAccount, SolscanPortfolioResponse } from '@/types/solana';
 import { fetchStakeAccounts, fetchWalletPortfolio } from '@/services/solscan';
@@ -69,11 +70,15 @@ export const useStakeAccounts = () => {
     setLastFetchedAddress(address);
     
     try {
+      console.log(`Starting data fetch for wallet: ${address}`);
+      
       // Fetch both stake accounts and portfolio data simultaneously
       const [currentPageResponse, portfolioResponse] = await Promise.all([
         fetchStakeAccounts(address, page, PAGE_SIZE),
         fetchWalletPortfolio(address)
       ]);
+      
+      console.log('Both API calls completed successfully');
       
       if (currentPageResponse.data) {
         setDisplayedAccounts(currentPageResponse.data);
@@ -82,7 +87,12 @@ export const useStakeAccounts = () => {
 
       // Set native balance from portfolio
       if (portfolioResponse.data?.native_balance) {
-        setNativeBalance(portfolioResponse.data.native_balance.balance);
+        const balance = portfolioResponse.data.native_balance.balance;
+        console.log(`Setting native balance in hook: ${balance} (${balance / 1e9} SOL)`);
+        setNativeBalance(balance);
+      } else {
+        console.warn('Native balance not available in portfolio response');
+        setNativeBalance(0);
       }
 
       const allAccounts = await loadAllPages(address);

@@ -9,6 +9,12 @@ interface MainMetricsProps {
 }
 
 const MainMetrics = ({ totalStakedBalance, activeStakeBalance, nativeBalance }: MainMetricsProps) => {
+  console.log('MainMetrics component received:', {
+    totalStakedBalance: `${totalStakedBalance} (${totalStakedBalance / 1e9} SOL)`,
+    activeStakeBalance: `${activeStakeBalance} (${activeStakeBalance / 1e9} SOL)`,
+    nativeBalance: `${nativeBalance} (${nativeBalance / 1e9} SOL)`,
+  });
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
       <MetricCard

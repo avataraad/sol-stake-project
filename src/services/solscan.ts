@@ -8,7 +8,7 @@ const SOLSCAN_API_URL = 'https://pro-api.solscan.io/v2.0/account/stake';
 // Add your Solscan API token here
 const SOLSCAN_API_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjcmVhdGVkQXQiOjE3NDQ4Mzc3MTcyODksImVtYWlsIjoiZXJpYy5rdWhuQGdlbWluaS5jb20iLCJhY3Rpb24iOiJ0b2tlbi1hcGkiLCJhcGlWZXJzaW9uIjoidjIiLCJpYXQiOjE3NDQ4Mzc3MTd9.jrnAu5QlIHFbkjIiBIKEpFronu7cub9HbUNGJZc7e8M";
 
-export const fetchStakeAccounts = async (address: string, page = 1, pageSize = 10): Promise<SolscanResponse> => {
+export const fetchStakeAccounts = async (address: string, page = 1, pageSize = 40): Promise<SolscanResponse> => {
   // Add query parameters for pagination
   const url = new URL(SOLSCAN_API_URL);
   url.searchParams.append('address', address);
@@ -25,16 +25,7 @@ export const fetchStakeAccounts = async (address: string, page = 1, pageSize = 1
   };
   
   try {
-    // Set a timeout for the fetch request
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-    
-    const response = await fetch(url.toString(), {
-      ...requestOptions,
-      signal: controller.signal
-    });
-    
-    clearTimeout(timeoutId); // Clear timeout if request completes
+    const response = await fetch(url.toString(), requestOptions);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -53,11 +44,60 @@ export const fetchStakeAccounts = async (address: string, page = 1, pageSize = 1
 
     return data;
   } catch (error) {
-    if (error.name === 'AbortError') {
-      console.error(`Request timeout for page ${page}`);
-      throw new Error(`Request timeout for page ${page}`);
-    }
     console.error(`Error fetching stake accounts page ${page}:`, error);
+    throw error;
+  }
+};
+
+// Helper function to fetch all pages of stake accounts
+export const fetchAllStakeAccountPages = async (address: string): Promise<StakeAccount[]> => {
+  let currentPage = 1;
+  let allAccounts: StakeAccount[] = [];
+  let hasMorePages = true;
+  const pageSize = 40; // Using maximum allowed page size
+  
+  console.log('Starting to fetch all stake account pages');
+  
+  try {
+    while (hasMorePages) {
+      console.log(`Fetching stake accounts page ${currentPage}`);
+      const response = await fetchStakeAccounts(address, currentPage, pageSize);
+      
+      if (response.data && response.data.length > 0) {
+        console.log(`Received ${response.data.length} accounts from page ${currentPage}`);
+        allAccounts = [...allAccounts, ...response.data];
+        
+        // Check if there are more pages based on the response metadata
+        if (response.metadata && response.metadata.hasNextPage === true) {
+          currentPage++;
+          console.log(`More pages available, moving to page ${currentPage}`);
+        } else {
+          hasMorePages = false;
+          console.log('No more pages available - metadata indicates last page');
+        }
+      } else {
+        // No data or empty array, stop pagination
+        hasMorePages = false;
+        console.log('No data received or empty array, stopping pagination');
+      }
+    }
+    
+    console.log(`Total stake accounts fetched across all pages: ${allAccounts.length}`);
+    
+    // Try to store all fetched accounts in Supabase
+    if (allAccounts.length > 0) {
+      try {
+        await storeStakeAccounts(address, allAccounts);
+        console.log(`Successfully stored ${allAccounts.length} stake accounts in Supabase`);
+      } catch (error) {
+        console.warn('Error storing stake accounts in Supabase (RLS policy may be restricting access):', error);
+        console.info('Continuing with API response data without storing in database');
+      }
+    }
+    
+    return allAccounts;
+  } catch (error) {
+    console.error('Error in fetchAllStakeAccountPages:', error);
     throw error;
   }
 };

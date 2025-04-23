@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SOLSCAN_API_URL, SOLSCAN_API_TOKEN, MAX_RETRIES, RETRY_DELAY } from './config';
 import { delay, handleApiResponse, getRequestOptions } from './utils';
 import { Database } from "@/integrations/supabase/types";
+import { storeStakeAccounts } from './database';
 
 export const fetchStakeAccounts = async (address: string, page = 1, pageSize = 40): Promise<SolscanResponse> => {
   let lastError: Error | null = null;

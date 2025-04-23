@@ -1,13 +1,6 @@
+
 import { useState } from 'react';
-import { Search, Filter, Copy } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { StakeAccount } from '@/types/solana';
 import {
   Table,
   TableBody,
@@ -19,15 +12,13 @@ import {
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Button } from "@/components/ui/button";
-import { StakeAccount } from '@/types/solana';
-import { useToast } from "@/hooks/use-toast";
+import { TruncatedAddress } from './table/TruncatedAddress';
+import { StakeTableFilters } from './table/StakeTableFilters';
 
 interface StakeAccountsTableProps {
   stakeAccounts: StakeAccount[];
@@ -37,39 +28,6 @@ interface StakeAccountsTableProps {
   hasNextPage?: boolean;
   totalPages: number;
 }
-
-const TruncatedAddress = ({ address }: { address: string }) => {
-  const { toast } = useToast();
-  const start = address.slice(0, 5);
-  const end = address.slice(-5);
-  const middle = address.slice(5, -5);
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(address);
-    toast({
-      title: "Copied to clipboard",
-      description: "The address has been copied to your clipboard.",
-    });
-  };
-
-  return (
-    <div className="flex items-center gap-2 font-mono text-sm break-all">
-      <div className="flex items-center flex-wrap">
-        <span>{start}</span>
-        <span className="text-muted-foreground">{middle}</span>
-        <span>{end}</span>
-      </div>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-6 w-6 shrink-0"
-        onClick={handleCopy}
-      >
-        <Copy className="h-3 w-3" />
-      </Button>
-    </div>
-  );
-};
 
 const StakeAccountsTable = ({ 
   stakeAccounts, 
@@ -86,7 +44,7 @@ const StakeAccountsTable = ({
   
   const filteredAccounts = stakeAccounts.filter(account => {
     const matchesSearch = account.stake_account.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || account.status.toLowerCase() === statusFilter;
+    const matchesStatus = statusFilter === 'all' || account.status.toLowerCase() === statusFilter.toLowerCase();
     return matchesSearch && matchesStatus;
   });
 
@@ -120,34 +78,12 @@ const StakeAccountsTable = ({
     <div className="chart-card">
       <div className="flex justify-between items-center mb-4">
         <h3 className="font-semibold">Stake Accounts</h3>
-        <div className="flex items-center gap-4">
-          <Select
-            value={statusFilter}
-            onValueChange={setStatusFilter}
-          >
-            <SelectTrigger className="w-[180px]">
-              <Filter className="mr-2 h-4 w-4" />
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
-              <SelectItem value="deactivating">Deactivating</SelectItem>
-              <SelectItem value="delegating">Delegating</SelectItem>
-            </SelectContent>
-          </Select>
-          <div className="relative w-64">
-            <Input
-              type="text"
-              placeholder="Search by stake account..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8"
-            />
-            <Search className="absolute left-2 top-2.5 h-5 w-5 text-gray-400" />
-          </div>
-        </div>
+        <StakeTableFilters 
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
+        />
       </div>
       <p className="text-sm text-gray-400 mb-2">
         All stake accounts associated with this wallet address

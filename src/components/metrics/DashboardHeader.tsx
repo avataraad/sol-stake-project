@@ -26,10 +26,10 @@ const DashboardHeader = ({
           placeholder="Enter Solana wallet address"
           value={walletAddress}
           onChange={(e) => setWalletAddress(e.target.value)}
-          className="glass-card px-4 py-2 w-80 bg-transparent focus:outline-none focus:ring-2 focus:ring-purple-500 border border-white/20"
+          className="glass-card px-4 py-2 w-80 bg-transparent focus:outline-none focus:ring-2 focus:ring-purple-500"
         />
         <button 
-          className="px-6 py-2 bg-purple-600 rounded-lg hover:bg-purple-700 transition border border-purple-500"
+          className="px-6 py-2 bg-purple-600 rounded-lg hover:bg-purple-700 transition"
           onClick={onTrack}
           disabled={isLoading}
         >

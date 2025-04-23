@@ -1,24 +1,11 @@
 
 import { useState } from 'react';
 import { StakeAccount } from '@/types/solana';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
-import { TruncatedAddress } from './table/TruncatedAddress';
+import { Table } from "@/components/ui/table";
 import { StakeTableFilters } from './table/StakeTableFilters';
+import { StakeTableHeader } from './table/StakeTableHeader';
+import { StakeTableBody } from './table/StakeTableBody';
+import { StakeTablePagination } from './table/StakeTablePagination';
 
 interface StakeAccountsTableProps {
   stakeAccounts: StakeAccount[];
@@ -90,92 +77,24 @@ const StakeAccountsTable = ({
       </p>
       <div className="overflow-x-auto">
         <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-1/8" onClick={() => handleSort('stake_account')}>
-                Stake Account {sortField === 'stake_account' && (sortDirection === 'asc' ? '↑' : '↓')}
-              </TableHead>
-              <TableHead className="w-1/8" onClick={() => handleSort('sol_balance')}>
-                SOL Balance {sortField === 'sol_balance' && (sortDirection === 'asc' ? '↑' : '↓')}
-              </TableHead>
-              <TableHead className="w-1/8" onClick={() => handleSort('status')}>
-                Status {sortField === 'status' && (sortDirection === 'asc' ? '↑' : '↓')}
-              </TableHead>
-              <TableHead className="w-1/8" onClick={() => handleSort('delegated_stake_amount')}>
-                Delegated Stake {sortField === 'delegated_stake_amount' && (sortDirection === 'asc' ? '↑' : '↓')}
-              </TableHead>
-              <TableHead className="w-1/8" onClick={() => handleSort('total_reward')}>
-                Rewards {sortField === 'total_reward' && (sortDirection === 'asc' ? '↑' : '↓')}
-              </TableHead>
-              <TableHead className="w-1/8" onClick={() => handleSort('voter')}>
-                Validator {sortField === 'voter' && (sortDirection === 'asc' ? '↑' : '↓')}
-              </TableHead>
-              <TableHead className="w-1/8" onClick={() => handleSort('type')}>
-                Type {sortField === 'type' && (sortDirection === 'asc' ? '↑' : '↓')}
-              </TableHead>
-              <TableHead className="w-1/8" onClick={() => handleSort('role')}>
-                Role {sortField === 'role' && (sortDirection === 'asc' ? '↓' : '↑')}
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sortedAccounts.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-gray-400">
-                  {isLoading 
-                    ? 'Loading stake accounts...' 
-                    : searchTerm 
-                      ? 'No matching stake accounts found.' 
-                      : 'No stake accounts found. Enter an address and click "Track" to get started.'}
-                </TableCell>
-              </TableRow>
-            ) : (
-              sortedAccounts.map((account) => (
-                <TableRow key={account.stake_account}>
-                  <TableCell className="max-w-[150px]">
-                    <TruncatedAddress address={account.stake_account} />
-                  </TableCell>
-                  <TableCell>{(account.sol_balance / 1e9).toFixed(2)} SOL</TableCell>
-                  <TableCell>{account.status}</TableCell>
-                  <TableCell>{(account.delegated_stake_amount / 1e9).toFixed(2)} SOL</TableCell>
-                  <TableCell>{(account.total_reward / 1e9).toFixed(2)} SOL</TableCell>
-                  <TableCell className="max-w-[150px]">
-                    <TruncatedAddress address={account.voter} />
-                  </TableCell>
-                  <TableCell>{account.type}</TableCell>
-                  <TableCell>{account.role}</TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
+          <StakeTableHeader 
+            sortField={sortField}
+            sortDirection={sortDirection}
+            onSort={handleSort}
+          />
+          <StakeTableBody 
+            accounts={sortedAccounts}
+            isLoading={isLoading}
+            searchTerm={searchTerm}
+          />
         </Table>
       </div>
-      <div className="mt-4 flex items-center justify-between">
-        <p className="text-sm text-gray-500">
-          Page {currentPage} of {totalPages || 1}
-        </p>
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious 
-                onClick={() => currentPage > 1 && onPageChange(currentPage - 1)}
-                className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
-              />
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink isActive={true}>
-                {currentPage}
-              </PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationNext 
-                onClick={() => hasNextPage && onPageChange(currentPage + 1)}
-                className={!hasNextPage ? 'pointer-events-none opacity-50' : ''}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      </div>
+      <StakeTablePagination 
+        currentPage={currentPage}
+        totalPages={totalPages}
+        hasNextPage={hasNextPage}
+        onPageChange={onPageChange}
+      />
     </div>
   );
 };

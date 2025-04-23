@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useStakeAccounts } from '@/hooks/useStakeAccounts';
 import DashboardHeader from './metrics/DashboardHeader';
@@ -33,7 +34,9 @@ const StakingMetrics = () => {
 
   const getActiveStakeBalance = () => {
     return stakeAccounts.reduce((sum, account) => {
-      return sum + (account.active_stake_amount || 0);
+      // Explicitly convert to number and handle potential undefined
+      const activeStake = Number(account.active_stake_amount || 0);
+      return sum + activeStake;
     }, 0);
   };
 

@@ -4,6 +4,17 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tool
 import { fetchStakeAccountRewards } from "@/services/solscan/rewards";
 import { useStakeAccounts } from "@/hooks/useStakeAccounts";
 
+// Define dummy data for the staked balance chart
+const dummyChartData = [
+  { name: "Apr 1", value: 24.2 },
+  { name: "Apr 8", value: 25.1 },
+  { name: "Apr 15", value: 26.3 },
+  { name: "Apr 22", value: 27.8 },
+  { name: "Apr 29", value: 29.1 },
+  { name: "May 6", value: 28.6 },
+  { name: "May 13", value: 30.2 },
+];
+
 const StakingCharts = () => {
   const [rewardsData, setRewardsData] = useState<{ date: string; reward: number }[]>([]);
   const { allStakeAccounts } = useStakeAccounts();

@@ -75,8 +75,8 @@ const StakeAccountsTable = ({
       <p className="text-sm text-gray-400 mb-2">
         All stake accounts associated with this wallet address
       </p>
-      <div className="overflow-x-auto">
-        <Table>
+      <div className="overflow-x-auto table-container">
+        <Table className="border border-gray-200/10">
           <StakeTableHeader 
             sortField={sortField}
             sortDirection={sortDirection}

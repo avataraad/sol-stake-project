@@ -16,14 +16,14 @@ const StakingCharts = () => {
             {["1W", "1M", "3M", "1Y"].map((period) => (
               <button
                 key={period}
-                className="px-3 py-1 text-sm rounded-md hover:bg-white/5"
+                className="px-3 py-1 text-sm rounded-md hover:bg-white/5 border border-gray-200/5"
               >
                 {period}
               </button>
             ))}
           </div>
         </div>
-        <div className="h-[300px]">
+        <div className="h-[300px] border border-gray-200/10 rounded-lg p-4">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={dummyChartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#333" />
@@ -48,14 +48,14 @@ const StakingCharts = () => {
             {["1W", "1M", "3M", "1Y"].map((period) => (
               <button
                 key={period}
-                className="px-3 py-1 text-sm rounded-md hover:bg-white/5"
+                className="px-3 py-1 text-sm rounded-md hover:bg-white/5 border border-gray-200/5"
               >
                 {period}
               </button>
             ))}
           </div>
         </div>
-        <div className="h-[300px]">
+        <div className="h-[300px] border border-gray-200/10 rounded-lg p-4">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={dummyChartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#333" />

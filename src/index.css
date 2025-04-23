@@ -37,13 +37,18 @@
 }
 
 .glass-card {
-  @apply bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl;
+  @apply bg-white/5 backdrop-blur-xl border border-white/20 rounded-2xl shadow-md;
 }
 
 .metric-card {
-  @apply glass-card p-8 flex flex-col gap-3;
+  @apply glass-card p-8 flex flex-col gap-3 border border-gray-200/10;
 }
 
 .chart-card {
-  @apply glass-card p-8;
+  @apply glass-card p-8 border border-gray-200/10;
 }
+
+.table-container {
+  @apply rounded-xl border border-gray-200/10 overflow-hidden;
+}
+

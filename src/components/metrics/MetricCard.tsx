@@ -10,13 +10,13 @@ interface MetricCardProps {
 }
 
 const MetricCard = ({ title, value, change, subtitle, icon }: MetricCardProps) => (
-  <div className="metric-card">
+  <div className="metric-card relative">
     <div className="flex justify-between items-start">
       <div>
         <p className="text-sm text-gray-400">{title}</p>
         <h3 className="text-2xl font-bold mt-1">{value}</h3>
       </div>
-      <div className="p-2 rounded-lg bg-white/5">{icon}</div>
+      <div className="p-2 rounded-lg bg-white/10 border border-white/10">{icon}</div>
     </div>
     {change && (
       <div className="flex items-center text-sm text-emerald-400">

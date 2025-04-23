@@ -22,12 +22,16 @@ const RewardsHistoryChart: React.FC<RewardsHistoryChartProps> = ({ stakeAccounts
   useEffect(() => {
     async function fetchData() {
       if (!stakeAccounts.length) {
+        console.log('No stake accounts available, skipping rewards fetch');
         setLoading(false);
         return;
       }
 
       try {
+        console.log(`Fetching rewards for ${stakeAccounts.length} stake accounts`);
         const aggregated = await aggregateAllRewards(stakeAccounts);
+        console.log('Aggregated rewards data:', aggregated);
+        
         const data: RewardData[] = Object.keys(aggregated).map((key) => {
           const [epoch, effectiveTime] = key.split('|');
           return {
@@ -36,11 +40,14 @@ const RewardsHistoryChart: React.FC<RewardsHistoryChartProps> = ({ stakeAccounts
             reward: aggregated[key]
           };
         });
+        
         // Sort the data by effective time.
         data.sort(
           (a, b) =>
             new Date(a.effectiveTime).getTime() - new Date(b.effectiveTime).getTime()
         );
+        
+        console.log(`Transformed data for chart: ${data.length} points`, data);
         setRewardHistoryData(data);
         setLoading(false);
       } catch (err: any) {

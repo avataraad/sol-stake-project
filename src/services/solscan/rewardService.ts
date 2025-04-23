@@ -17,6 +17,7 @@ export async function fetchRewardsForStakeAccount(address: string): Promise<any[
   };
 
   const url = `https://pro-api.solscan.io/v2.0/account/reward/export?address=${address}`;
+  console.log(`Fetching rewards for stake account: ${address}`);
 
   try {
     const response = await fetch(url, requestOptions);
@@ -26,11 +27,18 @@ export async function fetchRewardsForStakeAccount(address: string): Promise<any[
     
     // Read the CSV data from the response.
     const csvData = await response.text();
+    console.log(`Received CSV data length: ${csvData.length} characters`);
+    if (csvData.length < 100) {
+      console.log(`CSV data preview: ${csvData}`);
+    }
+    
     // Use the CSV parser to convert CSV into JSON.
     const parsedData = parseCSVToJSON(csvData);
+    console.log(`Parsed ${parsedData.length} reward records for account ${address}`);
+    
     return parsedData;
   } catch (error) {
-    console.error("Error in fetchRewardsForStakeAccount:", error);
+    console.error(`Error in fetchRewardsForStakeAccount for ${address}:`, error);
     throw error;
   }
 }

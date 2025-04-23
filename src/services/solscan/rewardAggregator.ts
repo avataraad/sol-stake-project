@@ -10,10 +10,12 @@ import { StakeAccount } from '@/types/solana';
  */
 export async function aggregateAllRewards(stakeAccounts: StakeAccount[]) {
   const aggregatedRewards: { [key: string]: number } = {};
+  console.log(`Starting reward aggregation for ${stakeAccounts.length} stake accounts`);
 
   await Promise.all(
     stakeAccounts.map(async (account) => {
       try {
+        console.log(`Processing account ${account.stake_account}`);
         const rewards = await fetchRewardsForStakeAccount(account.stake_account);
         rewards.forEach((record) => {
           const key = `${record['Epoch']}|${record['Effective Time']}`;
@@ -28,5 +30,6 @@ export async function aggregateAllRewards(stakeAccounts: StakeAccount[]) {
     })
   );
 
+  console.log(`Completed aggregation with ${Object.keys(aggregatedRewards).length} unique epoch/time combinations`);
   return aggregatedRewards;
 }

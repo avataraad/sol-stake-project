@@ -35,10 +35,7 @@ export const StakeTablePagination = ({
             />
           </PaginationItem>
           <PaginationItem>
-            <PaginationLink 
-              isActive={true}
-              className="bg-gray-800 hover:bg-gray-700"
-            >
+            <PaginationLink isActive={true}>
               {currentPage}
             </PaginationLink>
           </PaginationItem>

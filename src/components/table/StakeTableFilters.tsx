@@ -8,14 +8,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { ChevronDown } from "lucide-react";
 
 interface StakeTableFiltersProps {
   searchTerm: string;
@@ -32,34 +24,22 @@ export const StakeTableFilters = ({
 }: StakeTableFiltersProps) => {
   return (
     <div className="flex items-center gap-4">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="w-[180px] flex items-center justify-between">
-            <div className="flex items-center">
-              <Filter className="mr-2 h-4 w-4" />
-              {statusFilter === "all" ? "All Status" : statusFilter}
-            </div>
-            <ChevronDown className="h-4 w-4 opacity-50" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-[180px]">
-          <DropdownMenuItem onClick={() => setStatusFilter("all")}>
-            All Status
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setStatusFilter("active")}>
-            Active
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setStatusFilter("inactive")}>
-            Inactive
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setStatusFilter("deactivating")}>
-            Deactivating
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setStatusFilter("activating")}>
-            Activating
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <Select
+        value={statusFilter}
+        onValueChange={setStatusFilter}
+      >
+        <SelectTrigger className="w-[180px]">
+          <Filter className="mr-2 h-4 w-4" />
+          <SelectValue placeholder="Filter by status" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Statuses</SelectItem>
+          <SelectItem value="active">Active</SelectItem>
+          <SelectItem value="inactive">Inactive</SelectItem>
+          <SelectItem value="deactivating">Deactivating</SelectItem>
+          <SelectItem value="delegating">Delegating</SelectItem>
+        </SelectContent>
+      </Select>
       <div className="relative w-64">
         <Input
           type="text"

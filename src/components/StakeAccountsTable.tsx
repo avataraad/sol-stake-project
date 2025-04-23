@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, Copy } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -7,7 +7,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -25,7 +25,9 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { Button } from "@/components/ui/button";
 import { StakeAccount } from '@/types/solana';
+import { useToast } from "@/hooks/use-toast";
 
 interface StakeAccountsTableProps {
   stakeAccounts: StakeAccount[];
@@ -35,6 +37,39 @@ interface StakeAccountsTableProps {
   hasNextPage?: boolean;
   totalPages: number;
 }
+
+const TruncatedAddress = ({ address }: { address: string }) => {
+  const { toast } = useToast();
+  const start = address.slice(0, 5);
+  const end = address.slice(-5);
+  const middle = address.slice(5, -5);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(address);
+    toast({
+      title: "Copied to clipboard",
+      description: "The address has been copied to your clipboard.",
+    });
+  };
+
+  return (
+    <div className="flex items-center gap-2 font-mono text-sm">
+      <div className="flex items-center">
+        <span>{start}</span>
+        <span className="text-muted-foreground">{middle}</span>
+        <span>{end}</span>
+      </div>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-6 w-6"
+        onClick={handleCopy}
+      >
+        <Copy className="h-3 w-3" />
+      </Button>
+    </div>
+  );
+};
 
 const StakeAccountsTable = ({ 
   stakeAccounts, 
@@ -121,28 +156,28 @@ const StakeAccountsTable = ({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="cursor-pointer" onClick={() => handleSort('stake_account')}>
+              <TableHead className="w-[25%] cursor-pointer" onClick={() => handleSort('stake_account')}>
                 Stake Account {sortField === 'stake_account' && (sortDirection === 'asc' ? '↑' : '↓')}
               </TableHead>
-              <TableHead className="cursor-pointer" onClick={() => handleSort('sol_balance')}>
+              <TableHead className="w-[10%] cursor-pointer" onClick={() => handleSort('sol_balance')}>
                 SOL Balance {sortField === 'sol_balance' && (sortDirection === 'asc' ? '↑' : '↓')}
               </TableHead>
-              <TableHead className="cursor-pointer" onClick={() => handleSort('status')}>
+              <TableHead className="w-[10%] cursor-pointer" onClick={() => handleSort('status')}>
                 Status {sortField === 'status' && (sortDirection === 'asc' ? '↑' : '↓')}
               </TableHead>
-              <TableHead className="cursor-pointer" onClick={() => handleSort('delegated_stake_amount')}>
-                Delegated Stake (SOL) {sortField === 'delegated_stake_amount' && (sortDirection === 'asc' ? '↑' : '↓')}
+              <TableHead className="w-[12%] cursor-pointer" onClick={() => handleSort('delegated_stake_amount')}>
+                Delegated Stake {sortField === 'delegated_stake_amount' && (sortDirection === 'asc' ? '↑' : '↓')}
               </TableHead>
-              <TableHead className="cursor-pointer" onClick={() => handleSort('total_reward')}>
-                Total Rewards {sortField === 'total_reward' && (sortDirection === 'asc' ? '↑' : '↓')}
+              <TableHead className="w-[10%] cursor-pointer" onClick={() => handleSort('total_reward')}>
+                Rewards {sortField === 'total_reward' && (sortDirection === 'asc' ? '↑' : '↓')}
               </TableHead>
-              <TableHead className="cursor-pointer" onClick={() => handleSort('voter')}>
+              <TableHead className="w-[20%] cursor-pointer" onClick={() => handleSort('voter')}>
                 Validator {sortField === 'voter' && (sortDirection === 'asc' ? '↑' : '↓')}
               </TableHead>
-              <TableHead className="cursor-pointer" onClick={() => handleSort('type')}>
+              <TableHead className="w-[7%] cursor-pointer" onClick={() => handleSort('type')}>
                 Type {sortField === 'type' && (sortDirection === 'asc' ? '↑' : '↓')}
               </TableHead>
-              <TableHead className="cursor-pointer" onClick={() => handleSort('role')}>
+              <TableHead className="w-[6%] cursor-pointer" onClick={() => handleSort('role')}>
                 Role {sortField === 'role' && (sortDirection === 'asc' ? '↑' : '↓')}
               </TableHead>
             </TableRow>
@@ -161,12 +196,16 @@ const StakeAccountsTable = ({
             ) : (
               sortedAccounts.map((account) => (
                 <TableRow key={account.stake_account}>
-                  <TableCell className="font-mono text-sm">{account.stake_account}</TableCell>
+                  <TableCell>
+                    <TruncatedAddress address={account.stake_account} />
+                  </TableCell>
                   <TableCell>{(account.sol_balance / 1e9).toFixed(2)} SOL</TableCell>
                   <TableCell>{account.status}</TableCell>
                   <TableCell>{(account.delegated_stake_amount / 1e9).toFixed(2)} SOL</TableCell>
                   <TableCell>{(account.total_reward / 1e9).toFixed(2)} SOL</TableCell>
-                  <TableCell className="font-mono text-sm">{account.voter}</TableCell>
+                  <TableCell>
+                    <TruncatedAddress address={account.voter} />
+                  </TableCell>
                   <TableCell>{account.type}</TableCell>
                   <TableCell>{account.role}</TableCell>
                 </TableRow>

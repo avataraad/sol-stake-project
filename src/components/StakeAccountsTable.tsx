@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Search, Filter, Copy } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -86,7 +87,14 @@ const StakeAccountsTable = ({
   
   const filteredAccounts = stakeAccounts.filter(account => {
     const matchesSearch = account.stake_account.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || account.status.toLowerCase() === statusFilter;
+    
+    // Fix the status filter logic to correctly match statuses
+    let matchesStatus = statusFilter === 'all';
+    if (!matchesStatus && statusFilter && account.status) {
+      // Case-insensitive comparison for accurate status filtering
+      matchesStatus = account.status.toLowerCase() === statusFilter.toLowerCase();
+    }
+    
     return matchesSearch && matchesStatus;
   });
 
@@ -188,7 +196,7 @@ const StakeAccountsTable = ({
                 <TableCell colSpan={8} className="text-center py-8 text-gray-400">
                   {isLoading 
                     ? 'Loading stake accounts...' 
-                    : searchTerm 
+                    : searchTerm || statusFilter !== 'all'
                       ? 'No matching stake accounts found.' 
                       : 'No stake accounts found. Enter an address and click "Track" to get started.'}
                 </TableCell>

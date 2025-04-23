@@ -18,6 +18,7 @@ export const useStakeAccounts = () => {
     let allAccounts: StakeAccount[] = [];
     let currentPageNum = 1;
     let hasMore = true;
+    let failedAttempts = 0;
 
     while (hasMore) {
       try {
@@ -31,6 +32,7 @@ export const useStakeAccounts = () => {
       } catch (error) {
         console.error(`Error loading page ${currentPageNum}:`, error);
         hasMore = false;
+        throw new Error('Unable to load all stake accounts');
       }
     }
 
@@ -80,7 +82,7 @@ export const useStakeAccounts = () => {
       
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to fetch stake accounts. Please try again.",
+        description: "We were unable to load all your stake accounts, please retry later.",
         variant: "destructive",
       });
     } finally {

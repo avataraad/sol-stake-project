@@ -1,55 +1,60 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { SolscanResponse, StakeAccount } from "@/types/solana";
 import { Database } from "@/integrations/supabase/types";
 
 const SOLSCAN_API_URL = 'https://pro-api.solscan.io/v2.0/account/stake';
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000; // 1 second delay between retries
 
 // Add your Solscan API token here
 const SOLSCAN_API_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjcmVhdGVkQXQiOjE3NDQ4Mzc3MTcyODksImVtYWlsIjoiZXJpYy5rdWhuQGdlbWluaS5jb20iLCJhY3Rpb24iOiJ0b2tlbi1hcGkiLCJhcGlWZXJzaW9uIjoidjIiLCJpYXQiOjE3NDQ4Mzc3MTd9.jrnAu5QlIHFbkjIiBIKEpFronu7cub9HbUNGJZc7e8M";
 
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 export const fetchStakeAccounts = async (address: string, page = 1, pageSize = 40): Promise<SolscanResponse> => {
-  // Add query parameters for pagination
-  const url = new URL(SOLSCAN_API_URL);
-  url.searchParams.append('address', address);
-  url.searchParams.append('page', page.toString());
-  url.searchParams.append('page_size', pageSize.toString());
-
-  console.log(`Fetching stake accounts for page ${page} with URL:`, url.toString());
+  let lastError: Error | null = null;
   
-  const requestOptions = {
-    method: 'GET',
-    headers: {
-      'token': SOLSCAN_API_TOKEN
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const url = new URL(SOLSCAN_API_URL);
+      url.searchParams.append('address', address);
+      url.searchParams.append('page', page.toString());
+      url.searchParams.append('page_size', pageSize.toString());
+
+      console.log(`Fetching stake accounts for page ${page} (Attempt ${attempt}/${MAX_RETRIES})`);
+      
+      const requestOptions = {
+        method: 'GET',
+        headers: {
+          'token': SOLSCAN_API_TOKEN
+        }
+      };
+      
+      const response = await fetch(url.toString(), requestOptions);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to fetch stake accounts: ${response.status} ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log(`Successfully fetched stake accounts for page ${page}`);
+      
+      return data;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error('Unknown error occurred');
+      console.error(`Error fetching stake accounts page ${page} (Attempt ${attempt}/${MAX_RETRIES}):`, error);
+      
+      if (attempt < MAX_RETRIES) {
+        await delay(RETRY_DELAY);
+        continue;
+      }
     }
-  };
-  
-  try {
-    const response = await fetch(url.toString(), requestOptions);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Failed to fetch stake accounts: ${response.status} ${response.statusText}`, errorText);
-      throw new Error(`Failed to fetch stake accounts: ${response.status} ${errorText}`);
-    }
-
-    const data = await response.json();
-    console.log(`Successfully fetched stake accounts for page ${page}:`, {
-      page,
-      dataLength: data.data?.length || 0,
-      hasNextPage: data.metadata?.hasNextPage,
-      nextPage: data.metadata?.nextPage,
-      totalItems: data.metadata?.totalItems
-    });
-
-    return data;
-  } catch (error) {
-    console.error(`Error fetching stake accounts page ${page}:`, error);
-    throw error;
   }
+  
+  throw new Error(`Failed to fetch stake accounts after ${MAX_RETRIES} attempts: ${lastError?.message}`);
 };
 
-// Helper function to fetch all pages of stake accounts
 export const fetchAllStakeAccountPages = async (address: string): Promise<StakeAccount[]> => {
   let currentPage = 1;
   let allAccounts: StakeAccount[] = [];
@@ -102,7 +107,6 @@ export const fetchAllStakeAccountPages = async (address: string): Promise<StakeA
   }
 };
 
-// Helper function to map status to enum
 const mapStakeAccountStatus = (status: string): Database["public"]["Enums"]["stake_account_status"] => {
   const loweredStatus = status.toLowerCase();
   switch (loweredStatus) {

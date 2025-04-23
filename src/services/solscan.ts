@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { SolscanResponse, StakeAccount } from "@/types/solana";
+import { SolscanResponse, StakeAccount, SolscanPortfolioResponse } from "@/types/solana";
 import { Database } from "@/integrations/supabase/types";
 
 const SOLSCAN_API_URL = 'https://pro-api.solscan.io/v2.0/account/stake';

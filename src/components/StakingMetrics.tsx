@@ -11,6 +11,7 @@ const StakingMetrics = () => {
   const [walletAddress, setWalletAddress] = useState('CFATy5hmHLpiEdy9HgHFGzUPYFckQgBdwAUrP6xc3jKq');
   const { 
     stakeAccounts,
+    allStakeAccounts,
     isLoading, 
     currentPage,
     hasNextPage,
@@ -33,20 +34,22 @@ const StakingMetrics = () => {
   };
 
   const getActiveStakeBalance = () => {
-    console.log("Calculating active stake balance from", stakeAccounts.length, "accounts");
+    console.log("Calculating active stake balance from", allStakeAccounts.length, "accounts");
     
-    const totalActiveStake = stakeAccounts.reduce((sum, account, index) => {
-      // Log each account's active stake for debugging
-      console.log(
-        `Account #${index + 1} (${account.stake_account.substring(0, 8)}...): ` +
-        `active_stake_amount=${account.active_stake_amount}, ` +
-        `type=${typeof account.active_stake_amount}`
-      );
+    const totalActiveStake = allStakeAccounts.reduce((sum, account, index) => {
+      // Only log first few accounts for debugging to avoid console flooding
+      if (index < 5) {
+        console.log(
+          `Account #${index + 1} (${account.stake_account.substring(0, 8)}...): ` +
+          `active_stake_amount=${account.active_stake_amount}, ` +
+          `type=${typeof account.active_stake_amount}`
+        );
+      } else if (index === 5) {
+        console.log("... and more accounts");
+      }
       
       // Explicitly convert to number and handle potential undefined or null values
       const activeStake = Number(account.active_stake_amount || 0);
-      
-      console.log(`Converted active stake: ${activeStake}`);
       
       return sum + activeStake;
     }, 0);

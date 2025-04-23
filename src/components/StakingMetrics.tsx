@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useStakeAccounts } from '@/hooks/useStakeAccounts';
 import DashboardHeader from './metrics/DashboardHeader';
-import ActiveStakeMetrics from './metrics/ActiveStakeMetrics';
+import MainMetrics from './metrics/MainMetrics';
 import SecondaryMetrics from './metrics/SecondaryMetrics';
 import StakingCharts from './metrics/StakingCharts';
 import StakeAccountsTable from './StakeAccountsTable';
@@ -66,11 +66,9 @@ const StakingMetrics = () => {
         onTrack={handleTrack}
         isLoading={isLoading}
       />
-      <ActiveStakeMetrics 
-        totalStaked={getTotalStakedBalance()}
-        waitingToBeStaked={0}
-        apr={0}
-        aprChange={0}
+      <MainMetrics 
+        totalStakedBalance={getTotalStakedBalance()} 
+        activeStakeBalance={getActiveStakeBalance()}
       />
       <SecondaryMetrics lifetimeRewards={getLifetimeRewards()} />
       <StakingCharts />

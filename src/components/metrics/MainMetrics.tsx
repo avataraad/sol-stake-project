@@ -4,15 +4,21 @@ import MetricCard from "./MetricCard";
 
 interface MainMetricsProps {
   totalStakedBalance: number;
+  totalActiveBalance: number;
 }
 
-const MainMetrics = ({ totalStakedBalance }: MainMetricsProps) => {
+const MainMetrics = ({ totalStakedBalance, totalActiveBalance }: MainMetricsProps) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
       <MetricCard
-        title="Staked Balance"
+        title="Total SOL Balance"
         value={`${(totalStakedBalance / 1e9).toFixed(2)} SOL`}
         icon={<DollarSign className="text-purple-400" size={20} />}
+      />
+      <MetricCard
+        title="Active Balance"
+        value={`${(totalActiveBalance / 1e9).toFixed(2)} SOL`}
+        icon={<DollarSign className="text-emerald-400" size={20} />}
       />
       <MetricCard
         title="Waiting to be Staked"

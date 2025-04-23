@@ -1,0 +1,46 @@
+
+/**
+ * Parses a CSV string into an array of JSON objects.
+ * Assumes the CSV has a header row with comma-separated columns.
+ *
+ * @param csvData - The CSV string to parse.
+ * @returns An array of objects where keys are the column headers and values are the row values.
+ */
+export function parseCSVToJSON(csvData: string): any[] {
+  const lines = csvData
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line.length > 0);
+
+  if (lines.length < 2) {
+    throw new Error('CSV data must include a header row and at least one data row.');
+  }
+
+  // Use the first line as headers.
+  const headers = lines[0].split(',').map(header => header.trim());
+
+  // Process each row, mapping headers to their corresponding value.
+  const records = lines.slice(1).map(line => {
+    const values = line.split(',').map(value => value.trim());
+    const record: any = {};
+    headers.forEach((header, idx) => {
+      // Convert to number for numeric fields.
+      if (
+        header === 'Epoch' ||
+        header === 'Effective Slot' ||
+        header === 'Effective Time Unix' ||
+        header === 'Reward Amount' ||
+        header === 'Change Percentage' ||
+        header === 'Post Balance' ||
+        header === 'Commission'
+      ) {
+        record[header] = parseFloat(values[idx]);
+      } else {
+        record[header] = values[idx];
+      }
+    });
+    return record;
+  });
+
+  return records;
+}

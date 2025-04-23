@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useStakeAccounts } from '@/hooks/useStakeAccounts';
 import DashboardHeader from './metrics/DashboardHeader';
@@ -17,6 +18,7 @@ const StakingMetrics = () => {
     handlePageChange,
     getTotalStakedBalance,
     getLifetimeRewards,
+    getActiveStakesBalance,
     totalPages,
   } = useStakeAccounts();
 
@@ -39,7 +41,10 @@ const StakingMetrics = () => {
         onTrack={handleTrack}
         isLoading={isLoading}
       />
-      <MainMetrics totalStakedBalance={getTotalStakedBalance()} />
+      <MainMetrics 
+        totalStakedBalance={getTotalStakedBalance()} 
+        activeBalance={getActiveStakesBalance()} 
+      />
       <SecondaryMetrics lifetimeRewards={getLifetimeRewards()} />
       <StakingCharts />
       <StakeAccountsTable 

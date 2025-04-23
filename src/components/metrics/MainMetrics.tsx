@@ -4,9 +4,10 @@ import MetricCard from "./MetricCard";
 
 interface MainMetricsProps {
   totalStakedBalance: number;
+  activeBalance: number;
 }
 
-const MainMetrics = ({ totalStakedBalance }: MainMetricsProps) => {
+const MainMetrics = ({ totalStakedBalance, activeBalance }: MainMetricsProps) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <MetricCard
@@ -15,10 +16,9 @@ const MainMetrics = ({ totalStakedBalance }: MainMetricsProps) => {
         icon={<DollarSign className="text-purple-400" size={20} />}
       />
       <MetricCard
-        title="Waiting to be Staked"
-        value="0.00 SOL"
-        subtitle="Activation estimated in 2 epochs"
-        icon={<Hourglass className="text-blue-400" size={20} />}
+        title="Active Balance"
+        value={`${(activeBalance / 1e9).toFixed(2)} SOL`}
+        icon={<Trophy className="text-green-400" size={20} />}
       />
       <MetricCard
         title="APR % (30d)"

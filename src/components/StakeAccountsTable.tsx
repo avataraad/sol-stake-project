@@ -53,8 +53,8 @@ const TruncatedAddress = ({ address }: { address: string }) => {
   };
 
   return (
-    <div className="flex items-center gap-2 font-mono text-sm">
-      <div className="flex items-center">
+    <div className="flex items-center gap-2 font-mono text-sm break-all">
+      <div className="flex items-center flex-wrap">
         <span>{start}</span>
         <span className="text-muted-foreground">{middle}</span>
         <span>{end}</span>
@@ -62,7 +62,7 @@ const TruncatedAddress = ({ address }: { address: string }) => {
       <Button
         variant="ghost"
         size="icon"
-        className="h-6 w-6"
+        className="h-6 w-6 shrink-0"
         onClick={handleCopy}
       >
         <Copy className="h-3 w-3" />
@@ -156,29 +156,29 @@ const StakeAccountsTable = ({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[25%] cursor-pointer" onClick={() => handleSort('stake_account')}>
+              <TableHead className="w-1/8" onClick={() => handleSort('stake_account')}>
                 Stake Account {sortField === 'stake_account' && (sortDirection === 'asc' ? '↑' : '↓')}
               </TableHead>
-              <TableHead className="w-[10%] cursor-pointer" onClick={() => handleSort('sol_balance')}>
+              <TableHead className="w-1/8" onClick={() => handleSort('sol_balance')}>
                 SOL Balance {sortField === 'sol_balance' && (sortDirection === 'asc' ? '↑' : '↓')}
               </TableHead>
-              <TableHead className="w-[10%] cursor-pointer" onClick={() => handleSort('status')}>
+              <TableHead className="w-1/8" onClick={() => handleSort('status')}>
                 Status {sortField === 'status' && (sortDirection === 'asc' ? '↑' : '↓')}
               </TableHead>
-              <TableHead className="w-[12%] cursor-pointer" onClick={() => handleSort('delegated_stake_amount')}>
+              <TableHead className="w-1/8" onClick={() => handleSort('delegated_stake_amount')}>
                 Delegated Stake {sortField === 'delegated_stake_amount' && (sortDirection === 'asc' ? '↑' : '↓')}
               </TableHead>
-              <TableHead className="w-[10%] cursor-pointer" onClick={() => handleSort('total_reward')}>
+              <TableHead className="w-1/8" onClick={() => handleSort('total_reward')}>
                 Rewards {sortField === 'total_reward' && (sortDirection === 'asc' ? '↑' : '↓')}
               </TableHead>
-              <TableHead className="w-[20%] cursor-pointer" onClick={() => handleSort('voter')}>
+              <TableHead className="w-1/8" onClick={() => handleSort('voter')}>
                 Validator {sortField === 'voter' && (sortDirection === 'asc' ? '↑' : '↓')}
               </TableHead>
-              <TableHead className="w-[7%] cursor-pointer" onClick={() => handleSort('type')}>
+              <TableHead className="w-1/8" onClick={() => handleSort('type')}>
                 Type {sortField === 'type' && (sortDirection === 'asc' ? '↑' : '↓')}
               </TableHead>
-              <TableHead className="w-[6%] cursor-pointer" onClick={() => handleSort('role')}>
-                Role {sortField === 'role' && (sortDirection === 'asc' ? '↑' : '↓')}
+              <TableHead className="w-1/8" onClick={() => handleSort('role')}>
+                Role {sortField === 'role' && (sortDirection === 'asc' ? '↓' : '↑')}
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -196,14 +196,14 @@ const StakeAccountsTable = ({
             ) : (
               sortedAccounts.map((account) => (
                 <TableRow key={account.stake_account}>
-                  <TableCell>
+                  <TableCell className="max-w-[150px]">
                     <TruncatedAddress address={account.stake_account} />
                   </TableCell>
                   <TableCell>{(account.sol_balance / 1e9).toFixed(2)} SOL</TableCell>
                   <TableCell>{account.status}</TableCell>
                   <TableCell>{(account.delegated_stake_amount / 1e9).toFixed(2)} SOL</TableCell>
                   <TableCell>{(account.total_reward / 1e9).toFixed(2)} SOL</TableCell>
-                  <TableCell>
+                  <TableCell className="max-w-[150px]">
                     <TruncatedAddress address={account.voter} />
                   </TableCell>
                   <TableCell>{account.type}</TableCell>

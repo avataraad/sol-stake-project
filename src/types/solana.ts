@@ -1,4 +1,3 @@
-
 export interface StakeAccount {
   stake_account: string;
   sol_balance: number;
@@ -18,5 +17,13 @@ export interface SolscanResponse {
     hasNextPage: boolean;
     nextPage?: string;
     totalItems?: number;
+  };
+}
+
+export interface SolscanPortfolioResponse {
+  data: {
+    native_balance: {
+      balance: number;
+    };
   };
 }

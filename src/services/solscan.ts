@@ -107,6 +107,25 @@ export const fetchAllStakeAccountPages = async (address: string): Promise<StakeA
   }
 };
 
+export const fetchWalletPortfolio = async (address: string): Promise<SolscanPortfolioResponse> => {
+  const url = new URL('https://pro-api.solscan.io/v2.0/account/portfolio');
+  url.searchParams.append('address', address);
+
+  const requestOptions = {
+    method: 'GET',
+    headers: {
+      'token': SOLSCAN_API_TOKEN
+    }
+  };
+
+  const response = await fetch(url.toString(), requestOptions);
+  if (!response.ok) {
+    throw new Error('Failed to fetch wallet portfolio');
+  }
+
+  return response.json();
+};
+
 const mapStakeAccountStatus = (status: string): Database["public"]["Enums"]["stake_account_status"] => {
   const loweredStatus = status.toLowerCase();
   switch (loweredStatus) {

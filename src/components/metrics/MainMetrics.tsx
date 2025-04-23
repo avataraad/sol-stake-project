@@ -5,9 +5,10 @@ import MetricCard from "./MetricCard";
 interface MainMetricsProps {
   totalStakedBalance: number;
   activeStakeBalance: number;
+  nativeBalance: number;
 }
 
-const MainMetrics = ({ totalStakedBalance, activeStakeBalance }: MainMetricsProps) => {
+const MainMetrics = ({ totalStakedBalance, activeStakeBalance, nativeBalance }: MainMetricsProps) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
       <MetricCard
@@ -22,7 +23,7 @@ const MainMetrics = ({ totalStakedBalance, activeStakeBalance }: MainMetricsProp
       />
       <MetricCard
         title="Waiting to be Staked"
-        value="0.00 SOL"
+        value={`${(nativeBalance / 1e9).toFixed(2)} SOL`}
         subtitle="Activation estimated in 2 epochs"
         icon={<Hourglass className="text-blue-400" size={20} />}
       />
@@ -37,4 +38,3 @@ const MainMetrics = ({ totalStakedBalance, activeStakeBalance }: MainMetricsProp
 };
 
 export default MainMetrics;
-

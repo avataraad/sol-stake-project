@@ -1,7 +1,6 @@
-
 import { useState, useCallback } from 'react';
-import { StakeAccount } from '@/types/solana';
-import { fetchStakeAccounts } from '@/services/solscan';
+import { StakeAccount, SolscanPortfolioResponse } from '@/types/solana';
+import { fetchStakeAccounts, fetchWalletPortfolio } from '@/services/solscan';
 import { useToast } from "@/hooks/use-toast";
 
 export const useStakeAccounts = () => {
@@ -12,6 +11,7 @@ export const useStakeAccounts = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [hasNextPage, setHasNextPage] = useState(false);
   const [lastFetchedAddress, setLastFetchedAddress] = useState('');
+  const [nativeBalance, setNativeBalance] = useState(0);
   const { toast } = useToast();
   const PAGE_SIZE = 10;
 
@@ -69,12 +69,20 @@ export const useStakeAccounts = () => {
     setLastFetchedAddress(address);
     
     try {
-      const currentPageResponse = await fetchStakeAccounts(address, page, PAGE_SIZE);
+      // Fetch both stake accounts and portfolio data simultaneously
+      const [currentPageResponse, portfolioResponse] = await Promise.all([
+        fetchStakeAccounts(address, page, PAGE_SIZE),
+        fetchWalletPortfolio(address)
+      ]);
       
       if (currentPageResponse.data) {
-        console.log(`First page data sample:`, currentPageResponse.data[0]);
         setDisplayedAccounts(currentPageResponse.data);
         setHasNextPage(currentPageResponse.data.length === PAGE_SIZE);
+      }
+
+      // Set native balance from portfolio
+      if (portfolioResponse.data?.native_balance) {
+        setNativeBalance(portfolioResponse.data.native_balance.balance);
       }
 
       const allAccounts = await loadAllPages(address);
@@ -92,8 +100,8 @@ export const useStakeAccounts = () => {
         });
       }
     } catch (error) {
-      console.error('Error fetching stake accounts:', error);
-      setError(error instanceof Error ? error.message : 'Failed to fetch stake accounts');
+      console.error('Error fetching data:', error);
+      setError(error instanceof Error ? error.message : 'Failed to fetch data');
       
       toast({
         title: "Error",
@@ -148,5 +156,6 @@ export const useStakeAccounts = () => {
     getTotalStakedBalance,
     getLifetimeRewards,
     totalPages: getTotalPages(),
+    nativeBalance,
   };
 };

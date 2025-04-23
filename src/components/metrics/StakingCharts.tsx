@@ -1,13 +1,12 @@
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 
-const StakingCharts = () => {
-  // Define dummy chart data for initial state
-  const dummyChartData = Array.from({ length: 30 }, (_, i) => ({
-    name: `Day ${30 - i}`,
-    value: 0,
-  }));
+const dummyChartData = Array.from({ length: 30 }, (_, i) => ({
+  name: `Day ${30 - i}`,
+  value: 0,
+}));
 
+const StakingCharts = () => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div className="chart-card">

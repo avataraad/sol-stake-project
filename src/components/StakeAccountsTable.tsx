@@ -30,12 +30,16 @@ const StakeAccountsTable = ({
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   
   const filteredAccounts = stakeAccounts.filter(account => {
+    // Check if the account matches the search term
     const matchesSearch = account.stake_account.toLowerCase().includes(searchTerm.toLowerCase());
     
-    // Case insensitive comparison for status filter
-    const matchesStatus = 
-      statusFilter === 'all' || 
-      account.status.toLowerCase() === statusFilter.toLowerCase();
+    // For status filtering, normalize both the filter value and account status for comparison
+    let matchesStatus = true;
+    if (statusFilter !== 'all') {
+      const normalizedStatus = account.status.toLowerCase().trim();
+      const normalizedFilter = statusFilter.toLowerCase().trim();
+      matchesStatus = normalizedStatus === normalizedFilter;
+    }
     
     return matchesSearch && matchesStatus;
   });
@@ -88,7 +92,7 @@ const StakeAccountsTable = ({
             onSort={handleSort}
           />
           <StakeTableBody 
-            accounts={sortedAccounts}
+            accounts={filteredAccounts}
             isLoading={isLoading}
             searchTerm={searchTerm}
           />

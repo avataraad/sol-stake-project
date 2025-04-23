@@ -55,8 +55,8 @@ export const StakeTableFilters = ({
           <DropdownMenuItem onClick={() => setStatusFilter("deactivating")}>
             Deactivating
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setStatusFilter("delegating")}>
-            Delegating
+          <DropdownMenuItem onClick={() => setStatusFilter("activating")}>
+            Activating
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

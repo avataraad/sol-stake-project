@@ -14,7 +14,7 @@ export const StakeTableBody = ({ accounts, isLoading, searchTerm }: StakeTableBo
     <TableBody>
       {accounts.length === 0 ? (
         <TableRow>
-          <TableCell colSpan={8} className="text-center py-8 text-gray-400">
+          <TableCell colSpan={6} className="text-center py-8 text-gray-400">
             {isLoading 
               ? 'Loading stake accounts...' 
               : searchTerm 
@@ -30,16 +30,15 @@ export const StakeTableBody = ({ accounts, isLoading, searchTerm }: StakeTableBo
             </TableCell>
             <TableCell>{(account.sol_balance / 1e9).toFixed(2)} SOL</TableCell>
             <TableCell>{account.status}</TableCell>
-            <TableCell>{(account.delegated_stake_amount / 1e9).toFixed(2)} SOL</TableCell>
+            <TableCell>{(account.active_stake_amount / 1e9).toFixed(2)} SOL</TableCell>
             <TableCell>{(account.total_reward / 1e9).toFixed(2)} SOL</TableCell>
             <TableCell className="max-w-[150px]">
               <TruncatedAddress address={account.voter} />
             </TableCell>
-            <TableCell>{account.type}</TableCell>
-            <TableCell>{account.role}</TableCell>
           </TableRow>
         ))
       )}
     </TableBody>
   );
 };
+

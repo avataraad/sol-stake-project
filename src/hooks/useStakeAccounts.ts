@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { StakeAccount } from '@/types/solana';
 import { fetchStakeAccounts } from '@/services/solscan';
@@ -24,6 +25,15 @@ export const useStakeAccounts = () => {
       try {
         const response = await fetchStakeAccounts(address, currentPageNum, PAGE_SIZE);
         if (response.data && response.data.length > 0) {
+          // Log first account on each page to inspect data structure
+          if (response.data[0]) {
+            console.log(`Page ${currentPageNum} first account sample:`, {
+              stake_account: response.data[0].stake_account,
+              active_stake_amount: response.data[0].active_stake_amount,
+              type_of_active_stake: typeof response.data[0].active_stake_amount
+            });
+          }
+          
           allAccounts = [...allAccounts, ...response.data];
           currentPageNum++;
         } else {
@@ -36,6 +46,10 @@ export const useStakeAccounts = () => {
       }
     }
 
+    console.log(`Total accounts loaded: ${allAccounts.length}`);
+    console.log(`Sample of active_stake_amount values:`, 
+      allAccounts.slice(0, 3).map(a => a.active_stake_amount));
+    
     return allAccounts;
   };
 
@@ -58,6 +72,7 @@ export const useStakeAccounts = () => {
       const currentPageResponse = await fetchStakeAccounts(address, page, PAGE_SIZE);
       
       if (currentPageResponse.data) {
+        console.log(`First page data sample:`, currentPageResponse.data[0]);
         setDisplayedAccounts(currentPageResponse.data);
         setHasNextPage(currentPageResponse.data.length === PAGE_SIZE);
       }
@@ -106,14 +121,18 @@ export const useStakeAccounts = () => {
   };
 
   const getTotalStakedBalance = useCallback(() => {
-    return stakeAccounts.reduce((sum, account) => sum + account.delegated_stake_amount, 0);
+    const total = stakeAccounts.reduce((sum, account) => sum + account.delegated_stake_amount, 0);
+    console.log("Total staked balance calculated:", total);
+    return total;
   }, [stakeAccounts]);
 
   const getLifetimeRewards = useCallback(() => {
-    return stakeAccounts.reduce((sum, account) => {
+    const rewards = stakeAccounts.reduce((sum, account) => {
       const reward = Number(account.total_reward) || 0;
       return sum + reward;
     }, 0);
+    console.log("Lifetime rewards calculated:", rewards);
+    return rewards;
   }, [stakeAccounts]);
 
   return {

@@ -33,11 +33,26 @@ const StakingMetrics = () => {
   };
 
   const getActiveStakeBalance = () => {
-    return stakeAccounts.reduce((sum, account) => {
-      // Explicitly convert to number and handle potential undefined
+    console.log("Calculating active stake balance from", stakeAccounts.length, "accounts");
+    
+    const totalActiveStake = stakeAccounts.reduce((sum, account, index) => {
+      // Log each account's active stake for debugging
+      console.log(
+        `Account #${index + 1} (${account.stake_account.substring(0, 8)}...): ` +
+        `active_stake_amount=${account.active_stake_amount}, ` +
+        `type=${typeof account.active_stake_amount}`
+      );
+      
+      // Explicitly convert to number and handle potential undefined or null values
       const activeStake = Number(account.active_stake_amount || 0);
+      
+      console.log(`Converted active stake: ${activeStake}`);
+      
       return sum + activeStake;
     }, 0);
+    
+    console.log("Total calculated active stake:", totalActiveStake);
+    return totalActiveStake;
   };
 
   return (

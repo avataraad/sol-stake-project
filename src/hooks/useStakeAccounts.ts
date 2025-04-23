@@ -85,13 +85,13 @@ export const useStakeAccounts = () => {
         setHasNextPage(currentPageResponse.data.length === PAGE_SIZE);
       }
 
-      // Set native balance from portfolio
-      if (portfolioResponse.data?.native_balance) {
-        const balance = portfolioResponse.data.native_balance.balance;
+      // Set native balance from portfolio using the correct amount property
+      if (portfolioResponse.data?.native_balance?.amount) {
+        const balance = portfolioResponse.data.native_balance.amount;
         console.log(`Setting native balance in hook: ${balance} (${balance / 1e9} SOL)`);
         setNativeBalance(balance);
       } else {
-        console.warn('Native balance not available in portfolio response');
+        console.warn('Native balance not available in portfolio response or has unexpected structure');
         setNativeBalance(0);
       }
 

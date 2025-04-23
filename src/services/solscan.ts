@@ -132,8 +132,8 @@ export const fetchWalletPortfolio = async (address: string): Promise<SolscanPort
     const data = await response.json();
     console.log('Portfolio API response:', JSON.stringify(data, null, 2));
     
-    if (data?.data?.native_balance?.balance) {
-      console.log(`Native balance from API: ${data.data.native_balance.balance} (${data.data.native_balance.balance / 1e9} SOL)`);
+    if (data?.data?.native_balance?.amount) {
+      console.log(`Native balance from API: ${data.data.native_balance.amount} (${data.data.native_balance.amount / 1e9} SOL)`);
     } else {
       console.warn('Native balance not found in API response or has unexpected structure:', data);
     }

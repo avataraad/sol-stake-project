@@ -31,7 +31,12 @@ const StakeAccountsTable = ({
   
   const filteredAccounts = stakeAccounts.filter(account => {
     const matchesSearch = account.stake_account.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || account.status.toLowerCase() === statusFilter.toLowerCase();
+    
+    // Case insensitive comparison for status filter
+    const matchesStatus = 
+      statusFilter === 'all' || 
+      account.status.toLowerCase() === statusFilter.toLowerCase();
+    
     return matchesSearch && matchesStatus;
   });
 

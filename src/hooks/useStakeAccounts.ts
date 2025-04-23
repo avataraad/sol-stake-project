@@ -1,6 +1,5 @@
-
 import { useState, useCallback } from 'react';
-import { StakeAccount, SolscanPortfolioResponse } from '@/types/solana';
+import { StakeAccount } from '@/types/solana';
 import { fetchStakeAccounts, fetchWalletPortfolio } from '@/services/solscan';
 import { useToast } from "@/hooks/use-toast";
 

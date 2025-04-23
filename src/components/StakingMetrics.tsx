@@ -31,6 +31,12 @@ const StakingMetrics = () => {
     fetchAllStakeAccounts(walletAddress, 1);
   };
 
+  const getActiveStakeBalance = () => {
+    return stakeAccounts.reduce((sum, account) => {
+      return sum + (account.active_stake_amount || 0);
+    }, 0);
+  };
+
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
       <DashboardHeader
@@ -39,7 +45,10 @@ const StakingMetrics = () => {
         onTrack={handleTrack}
         isLoading={isLoading}
       />
-      <MainMetrics totalStakedBalance={getTotalStakedBalance()} />
+      <MainMetrics 
+        totalStakedBalance={getTotalStakedBalance()} 
+        activeStakeBalance={getActiveStakeBalance()}
+      />
       <SecondaryMetrics lifetimeRewards={getLifetimeRewards()} />
       <StakingCharts />
       <StakeAccountsTable 

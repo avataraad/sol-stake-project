@@ -10,7 +10,7 @@ const MainMetrics = ({ totalStakedBalance }: MainMetricsProps) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <MetricCard
-        title="Staked Balance"
+        title="Total SOL Balance"
         value={`${(totalStakedBalance / 1e9).toFixed(2)} SOL`}
         icon={<DollarSign className="text-purple-400" size={20} />}
       />

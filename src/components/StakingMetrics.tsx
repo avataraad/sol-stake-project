@@ -59,7 +59,7 @@ const StakingMetrics = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6">
+    <div className="max-w-[1400px] mx-auto p-8 space-y-8">
       <DashboardHeader
         walletAddress={walletAddress}
         setWalletAddress={setWalletAddress}

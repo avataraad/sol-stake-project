@@ -1,7 +1,5 @@
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
-import RewardsHistoryChart from './RewardsHistoryChart';
-import { useStakeAccounts } from '@/hooks/useStakeAccounts';
 
 const dummyChartData = Array.from({ length: 30 }, (_, i) => ({
   name: `Day ${30 - i}`,
@@ -9,8 +7,6 @@ const dummyChartData = Array.from({ length: 30 }, (_, i) => ({
 }));
 
 const StakingCharts = () => {
-  const { allStakeAccounts } = useStakeAccounts();
-
   return (
     <div className="grid grid-cols-1 gap-6">
       <div className="chart-card">
@@ -44,8 +40,6 @@ const StakingCharts = () => {
           </ResponsiveContainer>
         </div>
       </div>
-
-      <RewardsHistoryChart stakeAccounts={allStakeAccounts} />
     </div>
   );
 };

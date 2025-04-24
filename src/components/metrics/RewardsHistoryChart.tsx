@@ -28,8 +28,11 @@ const RewardsHistoryChart: React.FC<RewardsHistoryChartProps> = ({ stakeAccounts
       }
 
       try {
-        console.log(`Fetching rewards for ${stakeAccounts.length} stake accounts`);
-        const aggregated = await aggregateAllRewards(stakeAccounts);
+        // Only use first 5 stake accounts for testing to avoid overloading the API
+        const accountsToProcess = stakeAccounts.slice(0, 5);
+        console.log(`Fetching rewards for ${accountsToProcess.length} stake accounts (sample from ${stakeAccounts.length} total)`);
+        
+        const aggregated = await aggregateAllRewards(accountsToProcess);
         console.log('Aggregated rewards data:', aggregated);
         
         const data: RewardData[] = Object.keys(aggregated).map((key) => {
@@ -56,12 +59,30 @@ const RewardsHistoryChart: React.FC<RewardsHistoryChartProps> = ({ stakeAccounts
         setLoading(false);
       }
     }
-    fetchData();
+    
+    if (stakeAccounts.length > 0) {
+      console.log('Detected stake accounts, triggering rewards fetch');
+      fetchData();
+    }
   }, [stakeAccounts]);
 
-  if (loading) return <div>Loading Rewards History...</div>;
-  if (error) return <div>{error}</div>;
-  if (!rewardHistoryData.length) return <div>No rewards data available.</div>;
+  if (loading) return (
+    <div className="chart-card p-4">
+      <div className="text-center py-8">Loading Rewards History...</div>
+    </div>
+  );
+  
+  if (error) return (
+    <div className="chart-card p-4">
+      <div className="text-center py-8 text-red-500">{error}</div>
+    </div>
+  );
+  
+  if (!rewardHistoryData.length) return (
+    <div className="chart-card p-4">
+      <div className="text-center py-8">No rewards data available.</div>
+    </div>
+  );
 
   return (
     <div className="chart-card">

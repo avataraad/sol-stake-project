@@ -1,13 +1,12 @@
-
 import { useState, useCallback } from 'react';
 import { StakeAccount } from '@/types/solana';
-import { fetchAllStakeAccountPages, fetchStakeAccounts, fetchWalletPortfolio } from '@/services/solscan';
+import { fetchStakeAccounts, fetchWalletPortfolio } from '@/services/solscan';
 import { useToast } from "@/hooks/use-toast";
 
 export const useStakeAccounts = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [stakeAccounts, setStakeAccounts] = useState<StakeAccount[]>([]);
-  const [allStakeAccounts, setAllStakeAccounts] = useState<StakeAccount[]>([]);
+  const [displayedAccounts, setDisplayedAccounts] = useState<StakeAccount[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [hasNextPage, setHasNextPage] = useState(false);
@@ -15,6 +14,44 @@ export const useStakeAccounts = () => {
   const [nativeBalance, setNativeBalance] = useState(0);
   const { toast } = useToast();
   const PAGE_SIZE = 10;
+
+  const loadAllPages = async (address: string) => {
+    let allAccounts: StakeAccount[] = [];
+    let currentPageNum = 1;
+    let hasMore = true;
+    let failedAttempts = 0;
+
+    while (hasMore) {
+      try {
+        const response = await fetchStakeAccounts(address, currentPageNum, PAGE_SIZE);
+        if (response.data && response.data.length > 0) {
+          // Log first account on each page to inspect data structure
+          if (response.data[0]) {
+            console.log(`Page ${currentPageNum} first account sample:`, {
+              stake_account: response.data[0].stake_account,
+              active_stake_amount: response.data[0].active_stake_amount,
+              type_of_active_stake: typeof response.data[0].active_stake_amount
+            });
+          }
+          
+          allAccounts = [...allAccounts, ...response.data];
+          currentPageNum++;
+        } else {
+          hasMore = false;
+        }
+      } catch (error) {
+        console.error(`Error loading page ${currentPageNum}:`, error);
+        hasMore = false;
+        throw new Error('Unable to load all stake accounts');
+      }
+    }
+
+    console.log(`Total accounts loaded: ${allAccounts.length}`);
+    console.log(`Sample of active_stake_amount values:`, 
+      allAccounts.slice(0, 3).map(a => a.active_stake_amount));
+    
+    return allAccounts;
+  };
 
   const fetchAllStakeAccounts = async (address: string, page = 1) => {
     if (!address) {
@@ -34,21 +71,20 @@ export const useStakeAccounts = () => {
     try {
       console.log(`Starting data fetch for wallet: ${address}`);
       
-      // Fetch both stake accounts for the current page and portfolio data simultaneously
+      // Fetch both stake accounts and portfolio data simultaneously
       const [currentPageResponse, portfolioResponse] = await Promise.all([
         fetchStakeAccounts(address, page, PAGE_SIZE),
         fetchWalletPortfolio(address)
       ]);
       
-      console.log('API calls for initial page and portfolio completed successfully');
+      console.log('Both API calls completed successfully');
       
-      // Set the current page of accounts for display
       if (currentPageResponse.data) {
-        setStakeAccounts(currentPageResponse.data);
+        setDisplayedAccounts(currentPageResponse.data);
         setHasNextPage(currentPageResponse.data.length === PAGE_SIZE);
       }
 
-      // Set native balance from portfolio
+      // Set native balance from portfolio using the correct amount property
       if (portfolioResponse.data?.native_balance?.amount) {
         const balance = portfolioResponse.data.native_balance.amount;
         console.log(`Setting native balance in hook: ${balance} (${balance / 1e9} SOL)`);
@@ -58,15 +94,20 @@ export const useStakeAccounts = () => {
         setNativeBalance(0);
       }
 
-      // Fetch ALL stake accounts (this will also store them in the database)
-      console.log('Now fetching all stake accounts...');
-      const allAccounts = await fetchAllStakeAccountPages(address);
-      console.log(`Received ${allAccounts.length} total accounts from fetchAllStakeAccountPages`);
-      setAllStakeAccounts(allAccounts);
+      const allAccounts = await loadAllPages(address);
+      setStakeAccounts(allAccounts);
       
-      // Update the UI display based on the current page
-      handlePageChange(currentPage);
-      
+      if (allAccounts.length > 0) {
+        toast({
+          title: "Success",
+          description: `Found ${allAccounts.length} total stake accounts`,
+        });
+      } else {
+        toast({
+          title: "Information",
+          description: "No stake accounts found.",
+        });
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
       setError(error instanceof Error ? error.message : 'Failed to fetch data');
@@ -82,8 +123,8 @@ export const useStakeAccounts = () => {
   };
 
   const getTotalPages = useCallback(() => {
-    return Math.ceil(allStakeAccounts.length / PAGE_SIZE);
-  }, [allStakeAccounts.length]);
+    return Math.ceil(stakeAccounts.length / PAGE_SIZE);
+  }, [stakeAccounts.length]);
 
   const handlePageChange = (page: number) => {
     if (isLoading) return;
@@ -92,29 +133,28 @@ export const useStakeAccounts = () => {
     const endIndex = startIndex + PAGE_SIZE;
     setCurrentPage(page);
     
-    // Use allStakeAccounts instead of stakeAccounts for pagination
-    setStakeAccounts(allStakeAccounts.slice(startIndex, endIndex));
-    setHasNextPage(endIndex < allStakeAccounts.length);
+    setDisplayedAccounts(stakeAccounts.slice(startIndex, endIndex));
+    setHasNextPage(endIndex < stakeAccounts.length);
   };
 
   const getTotalStakedBalance = useCallback(() => {
-    const total = allStakeAccounts.reduce((sum, account) => sum + account.delegated_stake_amount, 0);
+    const total = stakeAccounts.reduce((sum, account) => sum + account.delegated_stake_amount, 0);
     console.log("Total staked balance calculated:", total);
     return total;
-  }, [allStakeAccounts]);
+  }, [stakeAccounts]);
 
   const getLifetimeRewards = useCallback(() => {
-    const rewards = allStakeAccounts.reduce((sum, account) => {
+    const rewards = stakeAccounts.reduce((sum, account) => {
       const reward = Number(account.total_reward) || 0;
       return sum + reward;
     }, 0);
     console.log("Lifetime rewards calculated:", rewards);
     return rewards;
-  }, [allStakeAccounts]);
+  }, [stakeAccounts]);
 
   return {
-    stakeAccounts, // Currently displayed accounts
-    allStakeAccounts, // All accounts for calculations
+    stakeAccounts: displayedAccounts,
+    allStakeAccounts: stakeAccounts,
     isLoading,
     error,
     currentPage,

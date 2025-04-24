@@ -1,9 +1,10 @@
 
 import { StakeAccount, SolscanResponse } from '@/types/solana';
+import { supabase } from "@/integrations/supabase/client";
 import { SOLSCAN_API_URL, SOLSCAN_API_TOKEN, MAX_RETRIES, RETRY_DELAY } from './config';
 import { delay, handleApiResponse, getRequestOptions } from './utils';
-import { storeStakeAccounts, getStoredStakeAccounts } from './database';
-import { toast } from "@/components/ui/use-toast";
+import { Database } from "@/integrations/supabase/types";
+import { storeStakeAccounts } from './database';
 
 export const fetchStakeAccounts = async (address: string, page = 1, pageSize = 40): Promise<SolscanResponse> => {
   let lastError: Error | null = null;
@@ -45,22 +46,6 @@ export const fetchAllStakeAccountPages = async (address: string): Promise<StakeA
   console.log('Starting to fetch all stake account pages');
   
   try {
-    // First try to get stored accounts, but only if we actually want to use cached data
-    // Let's force a fresh fetch from the API to ensure we have the latest data
-    /*
-    const storedAccounts = await getStoredStakeAccounts(address);
-    if (storedAccounts && storedAccounts.length > 0) {
-      console.log(`Found ${storedAccounts.length} stored accounts, using cached data`);
-      toast({
-        title: "Success",
-        description: `Loaded ${storedAccounts.length} stake accounts from cache`,
-      });
-      return storedAccounts;
-    }
-    */
-
-    // If no stored accounts, fetch from Solscan
-    console.log("Fetching fresh data from Solscan API");
     while (hasMorePages) {
       console.log(`Fetching stake accounts page ${currentPage}`);
       const response = await fetchStakeAccounts(address, currentPage, pageSize);
@@ -84,40 +69,19 @@ export const fetchAllStakeAccountPages = async (address: string): Promise<StakeA
     
     console.log(`Total stake accounts fetched across all pages: ${allAccounts.length}`);
     
-    // Store fetched accounts in database - FORCE STORAGE REGARDLESS OF CACHE
     if (allAccounts.length > 0) {
       try {
-        console.log(`Attempting to store ${allAccounts.length} stake accounts in database`);
         await storeStakeAccounts(address, allAccounts);
-        console.log(`Successfully stored ${allAccounts.length} stake accounts in database`);
-        
-        toast({
-          title: "Success",
-          description: `Found and stored ${allAccounts.length} stake accounts`,
-        });
-      } catch (storageError) {
-        console.error('Error storing stake accounts:', storageError);
-        toast({
-          title: "Warning",
-          description: "Retrieved stake accounts but failed to store them",
-          variant: "destructive",
-        });
+        console.log(`Successfully stored ${allAccounts.length} stake accounts in Supabase`);
+      } catch (error) {
+        console.warn('Error storing stake accounts in Supabase (RLS policy may be restricting access):', error);
+        console.info('Continuing with API response data without storing in database');
       }
-    } else {
-      toast({
-        title: "Information",
-        description: "No stake accounts found.",
-      });
     }
     
     return allAccounts;
   } catch (error) {
     console.error('Error in fetchAllStakeAccountPages:', error);
-    toast({
-      title: "Error",
-      description: "Failed to fetch stake accounts. Please try again later.",
-      variant: "destructive",
-    });
     throw error;
   }
 };

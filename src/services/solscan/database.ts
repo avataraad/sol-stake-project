@@ -38,23 +38,20 @@ export const storeStakeAccounts = async (walletAddress: string, accounts: StakeA
     
     console.log('Successfully deleted existing stake accounts, preparing new data for insertion');
 
-    // Prepare accounts data
-    const stakeAccountsToInsert = accounts.map(account => {
-      console.log(`Processing account ${account.stake_account.substring(0, 8)}...`);
-      return {
-        wallet_address: walletAddress,
-        stake_account: account.stake_account,
-        sol_balance: account.sol_balance,
-        status: mapStakeAccountStatus(account.status),
-        delegated_stake_amount: account.delegated_stake_amount,
-        total_reward: account.total_reward,
-        voter: account.voter,
-        type: account.type,
-        active_stake_amount: account.active_stake_amount,
-        activation_epoch: account.activation_epoch,
-        role: account.role
-      };
-    });
+    // Prepare accounts data with proper type mapping
+    const stakeAccountsToInsert = accounts.map(account => ({
+      wallet_address: walletAddress,
+      stake_account: account.stake_account,
+      sol_balance: account.sol_balance,
+      status: mapStakeAccountStatus(account.status),
+      delegated_stake_amount: account.delegated_stake_amount,
+      total_reward: account.total_reward,
+      voter: account.voter,
+      type: account.type,
+      active_stake_amount: account.active_stake_amount,
+      activation_epoch: account.activation_epoch,
+      role: account.role
+    }));
 
     // Insert accounts in batches of 100 to avoid potential payload size issues
     const batchSize = 100;

@@ -20,27 +20,53 @@ export function parseCSVToJSON(csvData: string): any[] {
   const headers = lines[0].split(',').map(header => header.trim());
 
   // Process each row, mapping headers to their corresponding value.
-  const records = lines.slice(1).map(line => {
+  const records = lines.slice(1).map((line, index) => {
     const values = line.split(',').map(value => value.trim());
     const record: any = {};
+    
     headers.forEach((header, idx) => {
-      // Convert to number for numeric fields.
-      if (
+      let value = values[idx];
+      
+      // Handle reward amount specifically to ensure it's a number
+      if (header === 'Reward Amount' || header === 'reward_amount') {
+        // Remove any currency symbols or commas and convert to number
+        const cleanedValue = value.replace(/[^-.\d]/g, '');
+        const numValue = parseFloat(cleanedValue);
+        
+        if (isNaN(numValue)) {
+          console.warn(`Invalid reward amount in row ${index + 1}: "${value}"`);
+          record[header] = 0; // Default to 0 for invalid numbers
+        } else {
+          record[header] = numValue;
+        }
+      }
+      // Convert other numeric fields
+      else if (
         header === 'Epoch' ||
         header === 'Effective Slot' ||
         header === 'Effective Time Unix' ||
-        header === 'Reward Amount' ||
         header === 'Change Percentage' ||
         header === 'Post Balance' ||
         header === 'Commission'
       ) {
-        record[header] = parseFloat(values[idx]);
+        const numValue = parseFloat(value);
+        record[header] = isNaN(numValue) ? 0 : numValue;
       } else {
-        record[header] = values[idx];
+        record[header] = value;
       }
     });
+
+    // Add debug logging for the first few records
+    if (index < 3) {
+      console.log(`Parsed record ${index + 1}:`, record);
+      if ('Reward Amount' in record) {
+        console.log(`Reward Amount type: ${typeof record['Reward Amount']}, value: ${record['Reward Amount']}`);
+      }
+    }
+
     return record;
   });
 
   return records;
 }
+

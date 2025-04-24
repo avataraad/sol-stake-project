@@ -1,3 +1,4 @@
+
 import { StakeAccount } from '@/types/solana';
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
@@ -23,41 +24,60 @@ export const storeStakeAccounts = async (walletAddress: string, accounts: StakeA
   try {
     console.log(`Starting to store ${accounts.length} stake accounts for wallet ${walletAddress}`);
     
-    // Delete existing accounts
+    // Delete existing accounts first to avoid duplicates
+    console.log(`Deleting existing stake accounts for wallet ${walletAddress}`);
     const { error: deleteError } = await supabase
       .from('stake_accounts')
       .delete()
       .eq('wallet_address', walletAddress);
 
-    if (deleteError) throw deleteError;
+    if (deleteError) {
+      console.error('Error deleting existing stake accounts:', deleteError);
+      throw deleteError;
+    }
+    
+    console.log('Successfully deleted existing stake accounts, preparing new data for insertion');
 
     // Prepare accounts data
-    const stakeAccountsToInsert = accounts.map(account => ({
-      wallet_address: walletAddress,
-      stake_account: account.stake_account,
-      sol_balance: account.sol_balance,
-      status: mapStakeAccountStatus(account.status),
-      delegated_stake_amount: account.delegated_stake_amount,
-      total_reward: account.total_reward,
-      voter: account.voter,
-      type: account.type,
-      active_stake_amount: account.active_stake_amount,
-      activation_epoch: account.activation_epoch,
-      role: account.role
-    }));
+    const stakeAccountsToInsert = accounts.map(account => {
+      console.log(`Processing account ${account.stake_account.substring(0, 8)}...`);
+      return {
+        wallet_address: walletAddress,
+        stake_account: account.stake_account,
+        sol_balance: account.sol_balance,
+        status: mapStakeAccountStatus(account.status),
+        delegated_stake_amount: account.delegated_stake_amount,
+        total_reward: account.total_reward,
+        voter: account.voter,
+        type: account.type,
+        active_stake_amount: account.active_stake_amount,
+        activation_epoch: account.activation_epoch,
+        role: account.role
+      };
+    });
 
-    // Insert new accounts
-    const { error: insertError } = await supabase
-      .from('stake_accounts')
-      .insert(stakeAccountsToInsert);
+    // Insert accounts in batches of 100 to avoid potential payload size issues
+    const batchSize = 100;
+    for (let i = 0; i < stakeAccountsToInsert.length; i += batchSize) {
+      const batch = stakeAccountsToInsert.slice(i, i + batchSize);
+      console.log(`Inserting batch ${Math.floor(i/batchSize) + 1} of ${Math.ceil(stakeAccountsToInsert.length/batchSize)}, size: ${batch.length}`);
+      
+      const { error: insertError } = await supabase
+        .from('stake_accounts')
+        .insert(batch);
 
-    if (insertError) throw insertError;
+      if (insertError) {
+        console.error(`Error inserting batch ${Math.floor(i/batchSize) + 1}:`, insertError);
+        throw insertError;
+      }
+      console.log(`Successfully inserted batch ${Math.floor(i/batchSize) + 1}`);
+    }
 
-    console.log(`Successfully stored ${accounts.length} stake accounts for wallet ${walletAddress}`);
+    console.log(`Successfully stored all ${accounts.length} stake accounts for wallet ${walletAddress}`);
     
     toast({
       title: "Success",
-      description: `Stored ${accounts.length} stake accounts`,
+      description: `Stored ${accounts.length} stake accounts in database`,
     });
 
   } catch (error) {

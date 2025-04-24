@@ -45,7 +45,9 @@ export const fetchAllStakeAccountPages = async (address: string): Promise<StakeA
   console.log('Starting to fetch all stake account pages');
   
   try {
-    // First try to get stored accounts
+    // First try to get stored accounts, but only if we actually want to use cached data
+    // Let's force a fresh fetch from the API to ensure we have the latest data
+    /*
     const storedAccounts = await getStoredStakeAccounts(address);
     if (storedAccounts && storedAccounts.length > 0) {
       console.log(`Found ${storedAccounts.length} stored accounts, using cached data`);
@@ -55,8 +57,10 @@ export const fetchAllStakeAccountPages = async (address: string): Promise<StakeA
       });
       return storedAccounts;
     }
+    */
 
     // If no stored accounts, fetch from Solscan
+    console.log("Fetching fresh data from Solscan API");
     while (hasMorePages) {
       console.log(`Fetching stake accounts page ${currentPage}`);
       const response = await fetchStakeAccounts(address, currentPage, pageSize);
@@ -80,9 +84,10 @@ export const fetchAllStakeAccountPages = async (address: string): Promise<StakeA
     
     console.log(`Total stake accounts fetched across all pages: ${allAccounts.length}`);
     
-    // Store fetched accounts in database
+    // Store fetched accounts in database - FORCE STORAGE REGARDLESS OF CACHE
     if (allAccounts.length > 0) {
       try {
+        console.log(`Attempting to store ${allAccounts.length} stake accounts in database`);
         await storeStakeAccounts(address, allAccounts);
         console.log(`Successfully stored ${allAccounts.length} stake accounts in database`);
         

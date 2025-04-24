@@ -25,12 +25,17 @@ const StakingMetrics = () => {
 
   useEffect(() => {
     if (walletAddress) {
+      console.log(`Initial load - fetching stake accounts for wallet: ${walletAddress}`);
       fetchAllStakeAccounts(walletAddress, 1);
     }
-  }, [walletAddress]);
+  }, []);
 
   const handleTrack = () => {
-    if (!walletAddress) return;
+    if (!walletAddress) {
+      console.error("Cannot track: wallet address is empty");
+      return;
+    }
+    console.log(`Track button clicked - fetching stake accounts for: ${walletAddress}`);
     fetchAllStakeAccounts(walletAddress, 1);
   };
 

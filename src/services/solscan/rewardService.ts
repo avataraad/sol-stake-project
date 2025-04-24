@@ -20,25 +20,44 @@ export async function fetchRewardsForStakeAccount(address: string): Promise<any[
   console.log(`Fetching rewards for stake account: ${address}`);
 
   try {
+    console.log(`Making API request to: ${url}`);
     const response = await fetch(url, requestOptions);
+    
+    console.log(`Response status: ${response.status}`);
     if (!response.ok) {
-      throw new Error(`Error fetching reward data for ${address}: ${response.statusText}`);
+      const responseText = await response.text();
+      console.error(`Error response from API: ${responseText}`);
+      throw new Error(`Error fetching reward data for ${address}: ${response.statusText} (${response.status})`);
     }
     
     // Read the CSV data from the response.
     const csvData = await response.text();
     console.log(`Received CSV data length: ${csvData.length} characters`);
+    
+    // Log a preview of the CSV data to help diagnose format issues
     if (csvData.length < 100) {
       console.log(`CSV data preview: ${csvData}`);
+    } else {
+      console.log(`CSV data preview: ${csvData.substring(0, 100)}...`);
+      // Check if it actually looks like CSV by checking for commas and newlines
+      const commaCount = csvData.split(',').length - 1;
+      const newlineCount = csvData.split('\n').length - 1;
+      console.log(`CSV data contains ${commaCount} commas and ${newlineCount} newlines`);
     }
     
     // Use the CSV parser to convert CSV into JSON.
     const parsedData = parseCSVToJSON(csvData);
     console.log(`Parsed ${parsedData.length} reward records for account ${address}`);
     
+    // Log sample of parsed data to verify structure
+    if (parsedData.length > 0) {
+      console.log('Sample of first parsed reward record:', parsedData[0]);
+    }
+    
     return parsedData;
   } catch (error) {
     console.error(`Error in fetchRewardsForStakeAccount for ${address}:`, error);
-    throw error;
+    // Return empty array instead of throwing to prevent one failed account from breaking the aggregation
+    return [];
   }
 }

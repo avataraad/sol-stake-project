@@ -1,7 +1,8 @@
+
 import { StakeAccount, SolscanResponse } from '@/types/solana';
 import { SOLSCAN_API_URL, SOLSCAN_API_TOKEN, MAX_RETRIES, RETRY_DELAY } from './config';
 import { delay, handleApiResponse, getRequestOptions } from './utils';
-import { storeStakeAccounts } from './database';
+import { storeStakeAccounts, getStoredStakeAccounts } from './database';
 import { toast } from "@/components/ui/use-toast";
 
 export const fetchStakeAccounts = async (address: string, page = 1, pageSize = 40): Promise<SolscanResponse> => {
@@ -44,6 +45,18 @@ export const fetchAllStakeAccountPages = async (address: string): Promise<StakeA
   console.log('Starting to fetch all stake account pages');
   
   try {
+    // First try to get stored accounts
+    const storedAccounts = await getStoredStakeAccounts(address);
+    if (storedAccounts && storedAccounts.length > 0) {
+      console.log(`Found ${storedAccounts.length} stored accounts, using cached data`);
+      toast({
+        title: "Success",
+        description: `Loaded ${storedAccounts.length} stake accounts from cache`,
+      });
+      return storedAccounts;
+    }
+
+    // If no stored accounts, fetch from Solscan
     while (hasMorePages) {
       console.log(`Fetching stake accounts page ${currentPage}`);
       const response = await fetchStakeAccounts(address, currentPage, pageSize);
@@ -67,6 +80,7 @@ export const fetchAllStakeAccountPages = async (address: string): Promise<StakeA
     
     console.log(`Total stake accounts fetched across all pages: ${allAccounts.length}`);
     
+    // Store fetched accounts in database
     if (allAccounts.length > 0) {
       try {
         await storeStakeAccounts(address, allAccounts);
@@ -74,7 +88,7 @@ export const fetchAllStakeAccountPages = async (address: string): Promise<StakeA
         
         toast({
           title: "Success",
-          description: `Found ${allAccounts.length} total stake accounts`,
+          description: `Found and stored ${allAccounts.length} stake accounts`,
         });
       } catch (storageError) {
         console.error('Error storing stake accounts:', storageError);

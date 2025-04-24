@@ -52,6 +52,16 @@ export const fetchAllStakeAccountPages = async (address: string): Promise<StakeA
       
       if (response.data && response.data.length > 0) {
         console.log(`Received ${response.data.length} accounts from page ${currentPage}`);
+        
+        // Store each page in the database as soon as it's received
+        try {
+          await storeStakeAccounts(address, response.data);
+          console.log(`Successfully stored page ${currentPage} with ${response.data.length} stake accounts in Supabase`);
+        } catch (error) {
+          console.error(`Error storing stake accounts from page ${currentPage} in Supabase:`, error);
+        }
+        
+        // Add to our in-memory collection
         allAccounts = [...allAccounts, ...response.data];
         
         if (response.metadata && response.metadata.hasNextPage === true) {
@@ -68,17 +78,6 @@ export const fetchAllStakeAccountPages = async (address: string): Promise<StakeA
     }
     
     console.log(`Total stake accounts fetched across all pages: ${allAccounts.length}`);
-    
-    if (allAccounts.length > 0) {
-      try {
-        await storeStakeAccounts(address, allAccounts);
-        console.log(`Successfully stored ${allAccounts.length} stake accounts in Supabase`);
-      } catch (error) {
-        console.warn('Error storing stake accounts in Supabase (RLS policy may be restricting access):', error);
-        console.info('Continuing with API response data without storing in database');
-      }
-    }
-    
     return allAccounts;
   } catch (error) {
     console.error('Error in fetchAllStakeAccountPages:', error);

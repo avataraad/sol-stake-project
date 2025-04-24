@@ -1,10 +1,8 @@
-
 import { StakeAccount, SolscanResponse } from '@/types/solana';
-import { supabase } from "@/integrations/supabase/client";
 import { SOLSCAN_API_URL, SOLSCAN_API_TOKEN, MAX_RETRIES, RETRY_DELAY } from './config';
 import { delay, handleApiResponse, getRequestOptions } from './utils';
-import { Database } from "@/integrations/supabase/types";
 import { storeStakeAccounts } from './database';
+import { toast } from "@/components/ui/use-toast";
 
 export const fetchStakeAccounts = async (address: string, page = 1, pageSize = 40): Promise<SolscanResponse> => {
   let lastError: Error | null = null;
@@ -72,16 +70,35 @@ export const fetchAllStakeAccountPages = async (address: string): Promise<StakeA
     if (allAccounts.length > 0) {
       try {
         await storeStakeAccounts(address, allAccounts);
-        console.log(`Successfully stored ${allAccounts.length} stake accounts in Supabase`);
-      } catch (error) {
-        console.warn('Error storing stake accounts in Supabase (RLS policy may be restricting access):', error);
-        console.info('Continuing with API response data without storing in database');
+        console.log(`Successfully stored ${allAccounts.length} stake accounts in database`);
+        
+        toast({
+          title: "Success",
+          description: `Found ${allAccounts.length} total stake accounts`,
+        });
+      } catch (storageError) {
+        console.error('Error storing stake accounts:', storageError);
+        toast({
+          title: "Warning",
+          description: "Retrieved stake accounts but failed to store them",
+          variant: "destructive",
+        });
       }
+    } else {
+      toast({
+        title: "Information",
+        description: "No stake accounts found.",
+      });
     }
     
     return allAccounts;
   } catch (error) {
     console.error('Error in fetchAllStakeAccountPages:', error);
+    toast({
+      title: "Error",
+      description: "Failed to fetch stake accounts. Please try again later.",
+      variant: "destructive",
+    });
     throw error;
   }
 };

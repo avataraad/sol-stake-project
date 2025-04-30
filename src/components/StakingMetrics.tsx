@@ -1,11 +1,13 @@
 
 import { useState, useEffect } from 'react';
 import { useStakeAccounts } from '@/hooks/useStakeAccounts';
+import { useRewards } from '@/hooks/useRewards';
 import DashboardHeader from './metrics/DashboardHeader';
 import MainMetrics from './metrics/MainMetrics';
 import SecondaryMetrics from './metrics/SecondaryMetrics';
 import StakingCharts from './metrics/StakingCharts';
 import StakeAccountsTable from './StakeAccountsTable';
+import RewardsTable from './RewardsTable';
 
 const StakingMetrics = () => {
   const [walletAddress, setWalletAddress] = useState('CFATy5hmHLpiEdy9HgHFGzUPYFckQgBdwAUrP6xc3jKq');
@@ -22,12 +24,25 @@ const StakingMetrics = () => {
     totalPages,
     nativeBalance,
   } = useStakeAccounts();
+  
+  const {
+    rewards,
+    isLoading: isLoadingRewards,
+    fetchRewardsForWallet
+  } = useRewards();
 
   useEffect(() => {
     if (walletAddress) {
       fetchAllStakeAccounts(walletAddress, 1);
     }
   }, [walletAddress]);
+
+  useEffect(() => {
+    if (allStakeAccounts && allStakeAccounts.length > 0) {
+      const stakeAccountAddresses = allStakeAccounts.map(account => account.stake_account);
+      fetchRewardsForWallet(stakeAccountAddresses);
+    }
+  }, [allStakeAccounts, fetchRewardsForWallet]);
 
   const handleTrack = () => {
     if (!walletAddress) return;
@@ -81,6 +96,10 @@ const StakingMetrics = () => {
         onPageChange={handlePageChange}
         hasNextPage={hasNextPage}
         totalPages={totalPages}
+      />
+      <RewardsTable 
+        rewards={rewards}
+        isLoading={isLoadingRewards}
       />
     </div>
   );

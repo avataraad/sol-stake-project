@@ -1,12 +1,13 @@
 
 import { useState, useCallback } from 'react';
 import { RewardEntry } from '@/types/solana';
-import { getRewardsForStakeAccount, getRewardsForWallet } from '@/services/solscan';
+import { getRewardsForStakeAccount, getRewardsForWallet, fetchRewards } from '@/services/solscan';
 import { useToast } from "@/hooks/use-toast";
 
 export const useRewards = () => {
   const [rewards, setRewards] = useState<RewardEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -79,11 +80,42 @@ export const useRewards = () => {
     }
   }, [toast]);
 
+  const refreshRewardsData = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      console.log('Starting rewards refresh process');
+      const result = await fetchRewards();
+      toast({
+        title: "Rewards Updated",
+        description: `${result.processed} rewards processed.`,
+      });
+      
+      // Reload the latest rewards data after refresh
+      if (rewards.length > 0) {
+        const stakeAccounts = [...new Set(rewards.map(r => r.stake_account))];
+        await fetchRewardsForWallet(stakeAccounts);
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Error refreshing rewards:', error);
+      toast({
+        title: "Error",
+        description: "Failed to refresh rewards data.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [rewards, fetchRewardsForWallet, toast]);
+
   return {
     rewards,
     isLoading,
+    isRefreshing,
     error,
     fetchRewardsForStakeAccount,
     fetchRewardsForWallet,
+    refreshRewardsData,
   };
 };

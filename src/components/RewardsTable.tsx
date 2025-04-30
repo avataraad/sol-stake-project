@@ -3,13 +3,15 @@ import { useState } from 'react';
 import { RewardEntry } from '@/types/solana';
 import { Table } from "@/components/ui/table";
 import { format } from 'date-fns';
+import { Button } from '@/components/ui/button';
 
 interface RewardsTableProps {
   rewards: RewardEntry[];
   isLoading: boolean;
+  onRefresh?: () => void;
 }
 
-const RewardsTable = ({ rewards, isLoading }: RewardsTableProps) => {
+const RewardsTable = ({ rewards, isLoading, onRefresh }: RewardsTableProps) => {
   const formatSOL = (lamports: number) => {
     return (lamports / 1e9).toFixed(4) + ' SOL';
   };
@@ -26,6 +28,16 @@ const RewardsTable = ({ rewards, isLoading }: RewardsTableProps) => {
     <div className="chart-card">
       <div className="flex justify-between items-center mb-4">
         <h3 className="font-semibold">Reward History</h3>
+        {onRefresh && (
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={onRefresh}
+            disabled={isLoading}
+          >
+            {isLoading ? "Refreshing..." : "Refresh Rewards"}
+          </Button>
+        )}
       </div>
       <p className="text-sm text-gray-400 mb-2">
         Recent rewards earned by stake accounts

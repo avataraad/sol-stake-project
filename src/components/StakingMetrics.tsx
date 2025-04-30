@@ -28,14 +28,16 @@ const StakingMetrics = () => {
   const {
     rewards,
     isLoading: isLoadingRewards,
-    fetchRewardsForWallet
+    isRefreshing,
+    fetchRewardsForWallet,
+    refreshRewardsData
   } = useRewards();
 
   useEffect(() => {
     if (walletAddress) {
       fetchAllStakeAccounts(walletAddress, 1);
     }
-  }, [walletAddress]);
+  }, [walletAddress, fetchAllStakeAccounts]);
 
   useEffect(() => {
     if (allStakeAccounts && allStakeAccounts.length > 0) {
@@ -99,7 +101,8 @@ const StakingMetrics = () => {
       />
       <RewardsTable 
         rewards={rewards}
-        isLoading={isLoadingRewards}
+        isLoading={isLoadingRewards || isRefreshing}
+        onRefresh={refreshRewardsData}
       />
     </div>
   );

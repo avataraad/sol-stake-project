@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { StakeAccount } from '@/types/solana';
 import { fetchStakeAccounts, fetchWalletPortfolio } from '@/services/solscan';
@@ -138,7 +139,11 @@ export const useStakeAccounts = () => {
   };
 
   const getTotalStakedBalance = useCallback(() => {
-    const total = stakeAccounts.reduce((sum, account) => sum + account.delegated_stake_amount, 0);
+    const total = stakeAccounts.reduce((sum, account) => {
+      // Explicitly convert sol_balance to number and handle potential undefined or null values
+      const solBalance = Number(account.sol_balance || 0);
+      return sum + solBalance;
+    }, 0);
     console.log("Total staked balance calculated:", total);
     return total;
   }, [stakeAccounts]);

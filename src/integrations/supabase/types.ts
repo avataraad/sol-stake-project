@@ -9,6 +9,45 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      rewards: {
+        Row: {
+          amount: number
+          commission: number
+          created_at: string
+          effective_slot: number
+          epoch: number
+          id: string
+          post_balance: number
+          stake_account: string
+          timestamp: string
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          commission: number
+          created_at?: string
+          effective_slot: number
+          epoch: number
+          id?: string
+          post_balance: number
+          stake_account: string
+          timestamp?: string
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          commission?: number
+          created_at?: string
+          effective_slot?: number
+          epoch?: number
+          id?: string
+          post_balance?: number
+          stake_account?: string
+          timestamp?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       stake_accounts: {
         Row: {
           activation_epoch: number | null

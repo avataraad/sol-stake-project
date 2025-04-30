@@ -28,3 +28,16 @@ export interface SolscanPortfolioResponse {
     };
   };
 }
+
+export interface RewardEntry {
+  id?: string;
+  stake_account: string;
+  epoch: number;
+  effective_slot: number;
+  amount: number;
+  commission: number;
+  post_balance: number;
+  timestamp: string;
+  created_at?: string;
+  updated_at?: string | null;
+}
